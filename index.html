@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RTK.WALLET</title>
+  <title>Buku Kas Istri</title>
   <link rel="icon" type="image/png" href="icon_rtk.png">
   <link rel="apple-touch-icon" href="icon_rtk.png">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="RTK Wallet">
-  <meta name="theme-color" content="#1E55D3">
+  <meta name="apple-mobile-web-app-title" content="Buku Kas">
+  <meta name="theme-color" content="#B8903B">
 
   <link rel="manifest" href="manifest.json">
 
   <!-- Google Font & FontAwesome/Chart.js/SweetAlert2 Dependencies -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,162 +26,167 @@
 
   <style>
     :root {
-      /* LIGHT MODE VINTAGE TERMINAL */
-      --bg-app: #E5F0E4;
-      --bg-card: #D8E8D5;
-      --border-color: #2D5A44;
-      --text-main: #1B3D2F;
-      --text-muted: #5C8270;
-      --accent-green: #007A4D;
-      --accent-red: #C62828;
-      --accent-orange: #D97706;
-      --card-shadow: 3px 3px 0px #2D5A44;
-      --input-bg: #EAEFEA;
-      --glow-effect: none;
+      /* LIGHT MODE VINTAGE PAPER */
+      --paper: #FBF6EA;
+      --paper-line: #E3D6B4;
+      --ink: #22314A;
+      --ink-soft: #6B7280;
+      --stamp-red: #A6402F;
+      --stamp-green: #2E6B4E;
+      --gold: #B8903B;
+      --card-bg: #FFFFFF;
+      --modal-bg: rgba(251, 246, 234, 0.95);
+      --ai-glow: rgba(184, 144, 59, 0.4);
     }
 
     [data-theme="dark"] {
-      /* DARK MODE RETRO CRT MONITOR */
-      --bg-app: #0A0F0D;
-      --bg-card: #121A16;
-      --border-color: #00FF66;
-      --text-main: #00FF66;
-      --text-muted: #008833;
-      --accent-green: #00FF66;
-      --accent-red: #FF4D4D;
-      --accent-orange: #F59E0B;
-      --card-shadow: 0 0 10px rgba(0, 255, 102, 0.25);
-      --input-bg: #0A0F0D;
-      --glow-effect: 0 0 8px rgba(0, 255, 102, 0.4);
+      /* DARK MODE MIDNIGHT LEATHER & GOLD */
+      --paper: #121824;
+      --paper-line: #222D3F;
+      --ink: #EAE3D2;
+      --ink-soft: #8C99B0;
+      --stamp-red: #E06C55;
+      --stamp-green: #3E8E68;
+      --gold: #D4AF37;
+      --card-bg: #1B2433;
+      --modal-bg: rgba(18, 24, 36, 0.95);
+      --ai-glow: rgba(212, 175, 55, 0.3);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
-      background-color: var(--bg-app);
-      color: var(--text-main);
-      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      background-color: var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      transition: background-color 0.25s ease, color 0.25s ease;
+      transition: background-color 0.3s ease, color 0.3s ease;
       position: relative;
+      background-image: repeating-linear-gradient(to bottom, transparent 0px, transparent 34px, var(--paper-line) 35px);
     }
 
+    /* Vertical Red/Gold Journal Line */
     body::before {
-      content: " ";
-      display: block;
+      content: '';
       position: fixed;
-      top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
-      background-size: 100% 4px;
-      z-index: 999;
-      pointer-events: none;
-      opacity: 0.6;
+      top: 0; left: max(20px, calc(50% - 440px));
+      width: 1px; height: 100%;
+      background: repeating-linear-gradient(to bottom, var(--gold) 0 4px, transparent 4px 10px);
+      opacity: 0.4;
+      z-index: -1;
     }
 
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    .term-box {
-      background: var(--bg-card);
-      border: 1.5px solid var(--border-color);
-      box-shadow: var(--card-shadow);
-      border-radius: 4px;
+    /* Typography */
+    .title-serif { font-family: 'Fraunces', serif; }
+    .text-mono { font-family: 'IBM Plex Mono', monospace; }
+    .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--ink-soft); text-transform: uppercase; }
+
+    /* Cards & Containers */
+    .vintage-card {
+      background: var(--card-bg);
+      border: 1px solid var(--paper-line);
+      border-radius: 8px;
       transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    .vintage-card-insight {
+      background: var(--ink);
+      color: var(--paper);
+      border: 1px solid var(--paper-line);
     }
 
-    .term-box-glow { box-shadow: var(--card-shadow), var(--glow-effect); }
-
-    .term-title-sub {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      font-weight: bold;
+    /* Form Elements */
+    .vintage-input, .vintage-select {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--paper-line);
+      border-bottom: 2px solid var(--ink-soft);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      outline: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .vintage-input:focus, .vintage-select:focus {
+      border-bottom-color: var(--gold);
+      background: var(--paper);
     }
 
-    .term-btn {
-      background: var(--bg-card);
-      border: 1.5px solid var(--border-color);
-      color: var(--text-main);
-      font-family: inherit;
-      font-weight: bold;
-      padding: 8px 14px;
+    /* Buttons */
+    .vintage-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--paper-line);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      padding: 10px 14px;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 6px;
       transition: all 0.15s ease;
       text-align: center;
       user-select: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
+    .vintage-btn:active { transform: translateY(1px); box-shadow: none; }
+    .vintage-btn-primary { background: var(--gold); color: var(--paper); border-color: var(--gold); }
+    .vintage-btn-outline { border: 1px dashed var(--gold); color: var(--gold); background: rgba(184, 144, 59, 0.05); }
+    .vintage-btn-danger { color: var(--stamp-red); border-color: rgba(166, 64, 47, 0.3); background: rgba(166, 64, 47, 0.05); }
 
-    .term-btn:hover { box-shadow: var(--card-shadow); filter: brightness(1.1); }
-    .term-btn:active { transform: scale(0.98); }
-    .term-btn-green { color: var(--accent-green); border-color: var(--accent-green); }
-    .term-btn-red { color: var(--accent-red); border-color: var(--accent-red); }
-
-    .term-input, .term-select {
-      width: 100%;
-      background: var(--input-bg);
-      border: 1.2px solid var(--border-color);
-      color: var(--text-main);
-      font-family: inherit;
-      padding: 10px;
-      font-size: 0.85rem;
-      outline: none;
-      border-radius: 4px;
+    /* Stamp Style (For Saldo) */
+    .stamp-wrap { display: flex; justify-content: center; margin: 10px 0 24px 0; }
+    .stamp {
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      border: 2px solid var(--gold);
+      outline: 1px solid var(--gold);
+      outline-offset: -8px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transform: rotate(-4deg);
+      background: rgba(184, 144, 59, 0.04);
+      box-shadow: 0 0 15px rgba(184, 144, 59, 0.05);
     }
+    .stamp .label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+    .stamp .value { font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600; margin-top: 6px; color: var(--gold); }
 
-    .term-input:focus, .term-select:focus { box-shadow: 0 0 6px var(--border-color); }
-    .cursor-blink { animation: blink 1s infinite; }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-    .top-budget-bar-bg {
-      width: 100%; height: 24px;
-      background-color: var(--input-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 4px; overflow: hidden; position: relative;
+    /* Quick Record Grid */
+    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .quick-btn {
+      background: var(--card-bg); border: 1px solid var(--paper-line);
+      border-radius: 8px; padding: 12px 4px; text-align: center; cursor: pointer;
     }
+    .quick-btn .emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+    .quick-btn .nama { font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; color: var(--ink); }
 
-    .top-budget-bar-fill {
-      height: 100%;
-      background: repeating-linear-gradient(45deg, var(--border-color), var(--border-color) 4px, var(--accent-orange) 4px, var(--accent-orange) 10px);
-      display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
-      transition: width 0.4s ease-in-out; min-width: 38px;
-    }
+    /* Budget Bar */
+    .budget-bar-bg { width: 100%; height: 12px; background-color: var(--paper-line); border-radius: 6px; overflow: hidden; }
+    .budget-bar-fill { height: 100%; background: var(--gold); transition: width 0.4s ease; }
 
-    .top-budget-bar-percent {
-      font-size: 0.72rem; font-weight: 800; color: #FFFFFF;
-      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9); white-space: nowrap;
-    }
+    /* Navigation */
+    .nav-item { color: var(--ink-soft); transition: all 0.2s; border-bottom: 2px solid transparent; }
+    .nav-item:hover, .nav-item.active { color: var(--ink); border-color: var(--gold); font-weight: 600; }
 
-    .nav-btn-term {
-      padding: 10px 12px; border: 1px solid transparent; border-radius: 4px;
-      cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
-      color: var(--text-muted); transition: all 0.2s ease;
-    }
-
-    .nav-btn-term:hover, .nav-btn-term.active {
-      color: var(--text-main); border-color: var(--border-color);
-      background: var(--bg-card); box-shadow: var(--card-shadow); font-weight: bold;
-    }
-
+    /* AI Button (Wax Seal Style) */
     .ai-fab-btn {
       position: fixed; bottom: 80px; right: 20px; z-index: 45;
-      width: 52px; height: 52px; border-radius: 50%;
-      background: var(--bg-card); border: 2px solid var(--border-color);
-      color: var(--accent-orange); display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; cursor: pointer; box-shadow: var(--card-shadow), var(--glow-effect);
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--gold); border: 2px solid var(--paper);
+      color: var(--paper); display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 10px var(--ai-glow);
       transition: all 0.2s ease;
     }
-
-    @media (min-width: 768px) {
-      .ai-fab-btn { bottom: 28px; right: 28px; width: 58px; height: 58px; font-size: 1.5rem; }
-    }
-
-    .ai-fab-btn:hover { transform: scale(1.08) rotate(5deg); filter: brightness(1.2); }
-    .ai-fab-btn:active { transform: scale(0.95); }
+    @media (min-width: 768px) { .ai-fab-btn { bottom: 28px; right: 28px; } }
+    .ai-fab-btn:hover { transform: scale(1.05) rotate(10deg); filter: brightness(1.1); }
 
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(2px); z-index: 50; display: flex;
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px); z-index: 50; display: flex;
       align-items: center; justify-content: center; padding: 16px;
     }
   </style>
@@ -190,239 +195,231 @@
 <body class="flex flex-col md:flex-row min-h-screen">
 
   <!-- SIDEBAR (DESKTOP) -->
-  <aside class="hidden md:flex flex-col w-64 bg-[var(--bg-card)] border-r-2 border-[var(--border-color)] p-5 space-y-6 z-30">
-    <div class="flex items-center justify-between border-b-2 border-[var(--border-color)] pb-4">
-      <div>
-        <div class="term-title-sub">PENCATAT KEUANGAN</div>
-        <h1 class="text-xl font-bold text-[var(--accent-green)] mt-1">RTK.WALLET<span class="cursor-blink">█</span></h1>
-      </div>
+  <aside class="hidden md:flex flex-col w-64 bg-[var(--card-bg)] border-r border-[var(--paper-line)] p-6 space-y-8 z-30 shadow-lg">
+    <div class="text-center pb-4 border-b border-[var(--gold)]">
+      <div class="eyebrow">Catatan Harian</div>
+      <h1 class="text-2xl font-bold title-serif text-[var(--ink)] mt-2">Buku Kas</h1>
     </div>
 
-    <button onclick="nav('input')" class="term-btn term-btn-green w-full text-sm py-3">
-      <i class="fa-solid fa-plus mr-1"></i> [ + CATAT BARU ]
+    <button onclick="nav('input')" class="vintage-btn vintage-btn-primary w-full py-3">
+      + Catat Baru
     </button>
 
-    <nav class="flex-1 space-y-2">
-      <div onclick="nav('dashboard')" id="desk-nav-dashboard" class="nav-btn-term active">
-        <i class="fa-solid fa-house w-5"></i> $ UTAMA / DASHBOARD
+    <nav class="flex-1 space-y-4 font-medium">
+      <div onclick="nav('dashboard')" id="desk-nav-dashboard" class="nav-item cursor-pointer flex items-center gap-3 pb-2 active">
+        <i class="fa-solid fa-book-open w-5 text-center"></i> Beranda
       </div>
-      <div onclick="nav('history')" id="desk-nav-history" class="nav-btn-term">
-        <i class="fa-solid fa-clock-rotate-left w-5"></i> $ RIWAYAT TRANSAKSI
+      <div onclick="nav('history')" id="desk-nav-history" class="nav-item cursor-pointer flex items-center gap-3 pb-2">
+        <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i> Riwayat
       </div>
-      <div onclick="nav('plan')" id="desk-nav-plan" class="nav-btn-term">
-        <i class="fa-solid fa-bullseye w-5"></i> $ RENCANA BUDGET
+      <div onclick="nav('plan')" id="desk-nav-plan" class="nav-item cursor-pointer flex items-center gap-3 pb-2">
+        <i class="fa-solid fa-bullseye w-5 text-center"></i> Anggaran
       </div>
-      <div onclick="nav('extra')" id="desk-nav-extra" class="nav-btn-term">
-        <i class="fa-solid fa-chart-pie w-5"></i> $ LAPORAN & UTANG
+      <div onclick="nav('extra')" id="desk-nav-extra" class="nav-item cursor-pointer flex items-center gap-3 pb-2">
+        <i class="fa-solid fa-handshake w-5 text-center"></i> Utang & Grafik
       </div>
     </nav>
 
-    <div class="border-t-2 border-[var(--border-color)] pt-4 flex justify-between items-center">
-      <button onclick="openManageCategoryModal()" class="term-btn text-xs" title="Kelola Kategori">
-        <i class="fa-solid fa-gear"></i> CONFIG
+    <div class="pt-4 border-t border-[var(--paper-line)] flex justify-between items-center text-sm text-mono">
+      <button onclick="openManageCategoryModal()" class="text-[var(--ink-soft)] hover:text-[var(--ink)]">
+        <i class="fa-solid fa-gear"></i> Config
       </button>
-      <button onclick="toggleTheme()" class="term-btn text-xs">
-        [ <span id="theme-text-desk">DARK</span> ]
+      <button onclick="toggleTheme()" class="text-[var(--gold)] font-bold">
+        <i class="fa-solid fa-moon"></i> <span id="theme-text-desk">Gelap</span>
       </button>
     </div>
   </aside>
 
   <!-- MAIN CONTENT CONTAINER -->
-  <main class="flex-1 overflow-y-auto p-4 md:p-8 max-w-4xl mx-auto w-full pb-28 md:pb-8">
+  <main class="flex-1 overflow-y-auto p-4 md:p-8 max-w-2xl mx-auto w-full pb-28 md:pb-8">
 
     <!-- Top Bar Mobile -->
-    <div class="md:hidden flex justify-between items-center mb-4">
-      <span class="term-title-sub">SYS.VER 2.0</span>
-      <div class="flex items-center gap-2">
-        <button onclick="openManageCategoryModal()" class="term-btn text-xs px-2.5 py-1">
+    <div class="md:hidden flex justify-between items-center mb-6 pb-2 border-b border-[var(--gold)]">
+      <div>
+        <div class="eyebrow">Catatan Harian</div>
+        <div class="text-xl font-bold title-serif mt-1">Buku Kas</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openManageCategoryModal()" class="text-[var(--ink)] text-lg">
           <i class="fa-solid fa-gear"></i>
         </button>
-        <button onclick="toggleTheme()" class="term-btn text-xs px-3 py-1">
-          [ MODE: <span id="theme-text-mob">DARK</span> ]
+        <button onclick="toggleTheme()" class="text-[var(--gold)] text-lg">
+          <i class="fa-solid fa-circle-half-stroke"></i>
         </button>
       </div>
-    </div>
-
-    <!-- Header Terminal Title -->
-    <div class="term-box p-4 text-center mb-4">
-      <div class="term-title-sub">PENCATAT KEUANGAN</div>
-      <div class="text-2xl md:text-3xl font-bold text-[var(--accent-green)] tracking-wider mt-1">
-        RTK.WALLET<span class="cursor-blink">█</span>
-      </div>
-    </div>
-
-    <div class="term-box p-2 text-center text-xs md:text-sm text-[var(--accent-orange)] mb-4 tracking-wider">
-      ⚡ <span id="streak-count">RTK</span> APLIKASI PENCATAT KEUANGAN
     </div>
 
     <!-- VIEW 1: DASHBOARD -->
-    <section id="view-dashboard" class="space-y-4">
-      <div class="term-box term-box-glow p-5 text-center">
-        <div class="term-title-sub">SALDO SAAT INI</div>
-        <div id="dash-total-saldo" class="text-3xl md:text-4xl font-extrabold text-[var(--accent-green)] mt-2 tracking-wide break-words">
-          Rp 0
+    <section id="view-dashboard" class="space-y-6">
+      
+      <!-- Stamp Saldo -->
+      <div class="stamp-wrap">
+        <div class="stamp">
+          <div class="label">Total Saldo</div>
+          <div class="value" id="dash-total-saldo">Rp 0</div>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div class="term-box p-3 text-center">
-          <div class="term-title-sub">MASUK (ALL-TIME)</div>
-          <div id="dash-pemasukan" class="text-sm md:text-base font-bold text-[var(--accent-green)] mt-1">Rp 0</div>
-        </div>
-        <div class="term-box p-3 text-center">
-          <div class="term-title-sub">KELUAR (ALL-TIME)</div>
-          <div id="dash-pengeluaran" class="text-sm md:text-base font-bold text-[var(--accent-red)] mt-1">Rp 0</div>
-        </div>
-      </div>
+      <div class="text-center eyebrow mb-2">🔥 <span id="streak-count">Rajin</span> Mencatat Keuangan</div>
 
-      <div class="term-box p-3">
-        <div class="term-title-sub text-center mb-2">PERIODE BULAN INI</div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="text-center border-r border-dashed border-[var(--border-color)] pr-2">
-            <span class="text-[10px] text-[var(--text-muted)] block">MASUK BULAN INI</span>
-            <span id="dash-pemasukan-bulan-ini" class="text-xs md:text-sm font-bold text-[var(--accent-green)]">Rp 0</span>
+      <!-- Insight Bulanan -->
+      <div class="vintage-card p-4">
+        <div class="eyebrow text-center mb-3">Statistik Bulan Ini</div>
+        <div class="flex justify-between items-center text-mono px-2">
+          <div class="text-center">
+            <span class="text-[10px] text-[var(--ink-soft)] block mb-1">MASUK</span>
+            <span id="dash-pemasukan-bulan-ini" class="text-sm font-bold text-[var(--stamp-green)]">Rp 0</span>
           </div>
-          <div class="text-center pl-2">
-            <span class="text-[10px] text-[var(--text-muted)] block">KELUAR BULAN INI</span>
-            <span id="dash-pengeluaran-bulan-ini" class="text-xs md:text-xs font-bold text-[var(--accent-red)]">Rp 0</span>
+          <div class="h-8 w-px bg-[var(--paper-line)]"></div>
+          <div class="text-center">
+            <span class="text-[10px] text-[var(--ink-soft)] block mb-1">KELUAR</span>
+            <span id="dash-pengeluaran-bulan-ini" class="text-sm font-bold text-[var(--stamp-red)]">Rp 0</span>
           </div>
         </div>
       </div>
 
-      <div id="dash-top-cat" class="hidden term-box p-4 space-y-2">
-        <div class="flex justify-between items-center text-xs md:text-sm font-bold">
+      <!-- All time summary hidden for cleaner UI, but variables remain for JS to run -->
+      <div class="hidden">
+        <div id="dash-pemasukan"></div>
+        <div id="dash-pengeluaran"></div>
+      </div>
+
+      <!-- Top Budget Warning -->
+      <div id="dash-top-cat" class="hidden vintage-card p-4 space-y-2 border-l-4 border-l-[var(--stamp-red)]">
+        <div class="flex justify-between items-center text-sm font-bold title-serif">
           <span id="dash-top-cat-title">📌 -</span>
+          <span id="dash-top-cat-percent" class="text-mono text-xs text-[var(--stamp-red)]">0%</span>
         </div>
-        <div class="top-budget-bar-bg">
-          <div id="dash-top-cat-bar" class="top-budget-bar-fill" style="width: 0%;">
-            <span id="dash-top-cat-percent" class="top-budget-bar-percent">0%</span>
-          </div>
+        <div class="budget-bar-bg">
+          <div id="dash-top-cat-bar" class="budget-bar-fill !bg-[var(--stamp-red)]" style="width: 0%;"></div>
         </div>
-        <div class="text-xs text-[var(--text-muted)]">
-          Terpakai: <b id="dash-top-cat-detail" class="text-[var(--text-main)]">Rp 0 / Rp 0</b>
+        <div class="text-xs text-[var(--ink-soft)] text-mono text-right">
+          Terpakai: <b id="dash-top-cat-detail" class="text-[var(--ink)]">Rp 0 / Rp 0</b>
         </div>
       </div>
 
+      <!-- Quick Record -->
       <div class="pt-2">
-        <div class="term-title-sub mb-2">$ CATAT KILAT</div>
-        <div class="grid grid-cols-4 gap-2">
-          <div class="term-btn text-center p-2.5" onclick="quickSelect('Makanan & Minuman', 'Kopi')">
-            <span class="text-lg block mb-1">☕</span>
-            <span class="text-[11px] font-bold block">KOPI</span>
+        <div class="eyebrow mb-3">Catat Kilat</div>
+        <div class="quick-grid">
+          <div class="quick-btn" onclick="quickSelect('Makanan & Minuman', 'Kopi')">
+            <span class="emoji">☕</span>
+            <div class="nama">Kopi</div>
           </div>
-          <div class="term-btn text-center p-2.5" onclick="quickSelect('Makanan & Minuman', 'Makan')">
-            <span class="text-lg block mb-1">🍔</span>
-            <span class="text-[11px] font-bold block">MAKAN</span>
+          <div class="quick-btn" onclick="quickSelect('Makanan & Minuman', 'Makan')">
+            <span class="emoji">🍔</span>
+            <div class="nama">Makan</div>
           </div>
-          <div class="term-btn text-center p-2.5" onclick="quickSelect('Transportasi', 'BBM/Trans')">
-            <span class="text-lg block mb-1">🚗</span>
-            <span class="text-[11px] font-bold block">TRANS</span>
+          <div class="quick-btn" onclick="quickSelect('Transportasi', 'BBM/Trans')">
+            <span class="emoji">🚗</span>
+            <div class="nama">Trans</div>
           </div>
-          <div class="term-btn text-center p-2.5" onclick="nav('input')">
-            <span class="text-lg block mb-1">➕</span>
-            <span class="text-[11px] font-bold block">LAIN</span>
+          <div class="quick-btn border-dashed border-[var(--gold)] flex flex-col justify-center bg-[rgba(184,144,59,0.05)]" onclick="nav('input')">
+            <span class="emoji text-[var(--gold)] mb-1">➕</span>
+            <div class="nama text-[var(--gold)]">Lain</div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- VIEW 2: INPUT TRANSAKSI -->
-    <section id="view-input" class="hidden space-y-4">
-      <div class="term-box p-5 space-y-4">
-        <div class="term-title-sub text-center border-b border-[var(--border-color)] pb-2">
-          > INPUT TRANSAKSI BARU
+    <section id="view-input" class="hidden space-y-5">
+      <div class="vintage-card p-5 space-y-4">
+        <div class="title-serif font-bold text-lg border-b border-[var(--paper-line)] pb-2">
+          Lembar Catatan Baru
         </div>
 
-        <div class="p-3 bg-[var(--input-bg)] border border-[var(--border-color)] rounded space-y-2">
+        <!-- AI Asisten -->
+        <div class="p-3 bg-[var(--paper)] border border-dashed border-[var(--gold)] rounded-lg space-y-3">
           <div class="flex justify-between items-center">
-            <label class="term-title-sub block">ASISTEN PINTAR GEMINI AI</label>
-            <span id="ai-status-indicator" class="text-[10px] text-[var(--accent-orange)] hidden">PROSES AI...<span class="cursor-blink">█</span></span>
+            <label class="eyebrow text-[var(--gold)]">ASISTEN PINTAR GEMINI</label>
+            <span id="ai-status-indicator" class="text-[10px] text-[var(--gold)] hidden font-bold">Proses...</span>
           </div>
-          <input type="text" id="smart-text-input" placeholder="Ketik: 'nasi uduk 2porsi 70ribu'..." class="term-input">
-          <div class="grid grid-cols-3 gap-2 pt-1">
-            <button type="button" onclick="processSmartNLPText()" class="term-btn term-btn-green text-xs py-2">
-              <i class="fa-solid fa-keyboard mr-1"></i> PROSES TEKS
+          <input type="text" id="smart-text-input" placeholder="Ketik: 'nasi uduk 2porsi 70ribu'..." class="vintage-input !bg-[var(--card-bg)]">
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="processSmartNLPText()" class="vintage-btn vintage-btn-outline text-[10px] py-2">
+              <i class="fa-solid fa-keyboard mr-1"></i> Teks
             </button>
-            <button type="button" onclick="startVoiceInput()" id="btn-mic-input" class="term-btn text-xs py-2 text-[var(--accent-orange)] border-[var(--accent-orange)]">
-              <i class="fa-solid fa-microphone mr-1"></i> [ MIC / SUARA ]
+            <button type="button" onclick="startVoiceInput()" id="btn-mic-input" class="vintage-btn vintage-btn-outline text-[10px] py-2">
+              <i class="fa-solid fa-microphone mr-1"></i> Suara
             </button>
-            <button type="button" onclick="document.getElementById('struk-file-input').click()" class="term-btn text-xs py-2">
-              <i class="fa-solid fa-camera mr-1"></i> [ SCAN STRUK ]
+            <button type="button" onclick="document.getElementById('struk-file-input').click()" class="vintage-btn vintage-btn-outline text-[10px] py-2">
+              <i class="fa-solid fa-camera mr-1"></i> Struk
             </button>
           </div>
           <input type="file" id="struk-file-input" accept="image/*" capture="environment" onchange="handleStrukUpload(event)" class="hidden">
         </div>
 
+        <!-- Manual Form -->
         <div>
-          <label class="term-title-sub block mb-1">JENIS TRANSAKSI</label>
+          <label class="eyebrow block mb-2">Jenis Transaksi</label>
           <div class="grid grid-cols-2 gap-2" id="input-jenis-toggle">
-            <button type="button" id="btn-pengeluaran" onclick="setJenis('Pengeluaran')" class="term-btn term-btn-red text-xs py-2.5">
-              Pengeluaran (KELUAR)
+            <button type="button" id="btn-pengeluaran" onclick="setJenis('Pengeluaran')" class="vintage-btn text-xs py-2 vintage-btn-danger">
+              Uang Keluar
             </button>
-            <button type="button" id="btn-pemasukan" onclick="setJenis('Pemasukan')" class="term-btn text-xs py-2.5 opacity-60">
-              Pemasukan (MASUK)
+            <button type="button" id="btn-pemasukan" onclick="setJenis('Pemasukan')" class="vintage-btn text-xs py-2 opacity-50">
+              Uang Masuk
             </button>
           </div>
         </div>
 
         <div>
-          <label class="term-title-sub block mb-1">KATEGORI</label>
-          <select id="input-kategori" class="term-select"></select>
+          <label class="eyebrow block mb-1">Kategori</label>
+          <select id="input-kategori" class="vintage-select"></select>
         </div>
 
         <div>
-          <label class="term-title-sub block mb-1">NOMINAL (RP)</label>
-          <!-- Auto dot formatted input -->
-          <input type="text" id="input-nominal" oninput="formatRupiahInput(this)" placeholder="0" class="term-input font-bold">
+          <label class="eyebrow block mb-1">Nominal (Rp)</label>
+          <input type="text" id="input-nominal" oninput="formatRupiahInput(this)" placeholder="0" class="vintage-input font-bold text-lg text-[var(--gold)]">
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="term-title-sub block mb-1">TANGGAL</label>
-            <input type="date" id="input-tanggal" class="term-input">
+            <label class="eyebrow block mb-1">Tanggal</label>
+            <input type="date" id="input-tanggal" class="vintage-input">
           </div>
           <div>
-            <label class="term-title-sub block mb-1">CATATAN (OPSIONAL)</label>
-            <input type="text" id="input-catatan" placeholder="Keterangan tambahan" class="term-input">
+            <label class="eyebrow block mb-1">Catatan</label>
+            <input type="text" id="input-catatan" placeholder="Keterangan..." class="vintage-input">
           </div>
         </div>
 
-        <button onclick="simpanTransaksi()" class="term-btn term-btn-green w-full py-3 text-sm mt-2">
-          [ SIMPAN TRANSAKSI ]
+        <button onclick="simpanTransaksi()" class="vintage-btn vintage-btn-primary w-full py-3 text-sm mt-4">
+          Simpan Transaksi
         </button>
       </div>
     </section>
 
     <!-- VIEW 3: RIWAYAT -->
     <section id="view-history" class="hidden space-y-4">
-      <div class="term-box p-3 grid grid-cols-2 gap-2">
-        <input type="month" id="filter-month" class="term-input text-xs" onchange="renderHistory()">
-        <select id="filter-type" class="term-select text-xs" onchange="renderHistory()">
+      <div class="vintage-card p-3 grid grid-cols-2 gap-3">
+        <input type="month" id="filter-month" class="vintage-input text-xs" onchange="renderHistory()">
+        <select id="filter-type" class="vintage-select text-xs" onchange="renderHistory()">
           <option value="All">Semua Jenis</option>
           <option value="Pengeluaran">Pengeluaran</option>
           <option value="Pemasukan">Pemasukan</option>
         </select>
       </div>
 
-      <div class="term-box p-4">
-        <div class="term-title-sub border-b border-[var(--border-color)] pb-2 mb-3">
-          > DAFTAR RIWAYAT TRANSAKSI
+      <div class="vintage-card p-4">
+        <div class="title-serif font-bold border-b border-[var(--gold)] pb-2 mb-3 text-lg">
+          Daftar Riwayat
         </div>
-        <div id="history-list" class="space-y-2"></div>
+        <div id="history-list" class="space-y-0"></div>
       </div>
     </section>
 
     <!-- VIEW 4: RENCANA BUDGET -->
     <section id="view-plan" class="hidden space-y-4">
-      <div class="term-box p-4">
-        <div class="flex justify-between items-center border-b border-[var(--border-color)] pb-2 mb-3">
-          <div class="term-title-sub">> RENCANA BUDGET KATEGORI (PERMANEN)</div>
-          <button onclick="openAddBudgetModal()" class="term-btn term-btn-green text-xs py-1 px-2.5">
-            + SET BUDGET
+      <div class="vintage-card p-5">
+        <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2 mb-4">
+          <div class="title-serif font-bold text-lg">Anggaran Bulanan</div>
+          <button onclick="openAddBudgetModal()" class="vintage-btn vintage-btn-outline text-xs py-1 px-3">
+            + Target
           </button>
         </div>
-        <p class="text-xs text-[var(--text-muted)] mb-4">
-          Target anggaran berlaku permanen dan otomatis direset pemakaiannya setiap tanggal 1 bulan baru.
+        <p class="text-xs text-[var(--ink-soft)] mb-5 leading-relaxed">
+          Target anggaran berlaku permanen dan otomatis direset pemakaiannya setiap awal bulan.
         </p>
         <div id="plan-list" class="space-y-4"></div>
       </div>
@@ -430,20 +427,20 @@
 
     <!-- VIEW 5: LAPORAN & UTANG -->
     <section id="view-extra" class="hidden space-y-6">
-      <div class="term-box p-4 space-y-3">
-        <div class="term-title-sub border-b border-[var(--border-color)] pb-2">
-          > GRAFIK PENGELUARAN BULAN INI
+      <div class="vintage-card p-5 space-y-3">
+        <div class="title-serif font-bold border-b border-[var(--gold)] pb-2 text-lg">
+          Grafik Pengeluaran
         </div>
-        <div class="relative w-full max-w-xs mx-auto h-52">
+        <div class="relative w-full max-w-xs mx-auto h-52 mt-4">
           <canvas id="expenseChart"></canvas>
         </div>
       </div>
 
-      <div class="term-box p-4 space-y-4">
-        <div class="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
-          <div class="term-title-sub">> CATATAN UTANG / PIUTANG</div>
-          <button onclick="openAddDebtModal()" class="term-btn term-btn-green text-xs py-1 px-2">
-            + TAMBAH RECORD
+      <div class="vintage-card p-5 space-y-4">
+        <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
+          <div class="title-serif font-bold text-lg">Catatan Utang</div>
+          <button onclick="openAddDebtModal()" class="vintage-btn vintage-btn-outline text-xs py-1 px-3">
+            + Catat
           </button>
         </div>
         <div id="debt-list" class="space-y-3"></div>
@@ -451,50 +448,56 @@
     </section>
   </main>
 
-  <button id="ai-fab-button" onclick="triggerAIAnalysis()" class="ai-fab-btn" title="Tanya Bobib AI">🤖</button>
+  <button id="ai-fab-button" onclick="triggerAIAnalysis()" class="ai-fab-btn" title="Tanya AI">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+  </button>
 
   <!-- Mobile Bottom Navigation -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--bg-card)] border-t-2 border-[var(--border-color)] p-2 z-40 flex justify-around items-center">
-    <button onclick="nav('dashboard')" id="mob-nav-dashboard" class="term-btn text-[11px] py-1.5 px-2 active">
-      <i class="fa-solid fa-house block text-sm mb-0.5"></i> UTAMA
-    </button>
-    <button onclick="nav('history')" id="mob-nav-history" class="term-btn text-[11px] py-1.5 px-2">
-      <i class="fa-solid fa-clock-rotate-left block text-sm mb-0.5"></i> RIWAYAT
-    </button>
-    <button onclick="nav('input')" id="mob-nav-input" class="term-btn term-btn-green text-[11px] py-1.5 px-3">
-      <i class="fa-solid fa-plus block text-sm mb-0.5"></i> CATAT
-    </button>
-    <button onclick="nav('plan')" id="mob-nav-plan" class="term-btn text-[11px] py-1.5 px-2">
-      <i class="fa-solid fa-bullseye block text-sm mb-0.5"></i> BUDGET
-    </button>
-    <button onclick="nav('extra')" id="mob-nav-extra" class="term-btn text-[11px] py-1.5 px-2">
-      <i class="fa-solid fa-chart-pie block text-sm mb-0.5"></i> UTANG
-    </button>
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--card-bg)] border-t border-[var(--paper-line)] px-2 pb-5 pt-3 z-40 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+    <div onclick="nav('dashboard')" id="mob-nav-dashboard" class="nav-item flex flex-col items-center gap-1 active cursor-pointer w-16">
+      <i class="fa-solid fa-book-open text-lg"></i>
+      <span class="text-[9px] font-medium">Beranda</span>
+    </div>
+    <div onclick="nav('history')" id="mob-nav-history" class="nav-item flex flex-col items-center gap-1 cursor-pointer w-16">
+      <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+      <span class="text-[9px] font-medium">Riwayat</span>
+    </div>
+    <div onclick="nav('input')" id="mob-nav-input" class="flex flex-col items-center justify-center cursor-pointer -mt-6 bg-[var(--gold)] text-[var(--paper)] w-12 h-12 rounded-full shadow-lg border-2 border-[var(--paper)]">
+      <i class="fa-solid fa-plus text-xl"></i>
+    </div>
+    <div onclick="nav('plan')" id="mob-nav-plan" class="nav-item flex flex-col items-center gap-1 cursor-pointer w-16">
+      <i class="fa-solid fa-bullseye text-lg"></i>
+      <span class="text-[9px] font-medium">Anggaran</span>
+    </div>
+    <div onclick="nav('extra')" id="mob-nav-extra" class="nav-item flex flex-col items-center gap-1 cursor-pointer w-16">
+      <i class="fa-solid fa-handshake text-lg"></i>
+      <span class="text-[9px] font-medium">Utang</span>
+    </div>
   </nav>
 
   <!-- Modal Kelola Kategori -->
   <div id="category-modal" class="modal-overlay hidden">
-    <div class="term-box p-5 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
-        <div class="term-title-sub">> KELOLA KATEGORI</div>
-        <button onclick="closeManageCategoryModal()" class="term-btn text-xs px-2 py-0.5">X</button>
+    <div class="vintage-card p-5 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
+        <div class="title-serif font-bold text-lg">Kelola Kategori</div>
+        <button onclick="closeManageCategoryModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="space-y-2 border-b border-[var(--border-color)] pb-4">
-        <label class="term-title-sub block">TAMBAH KATEGORI BARU</label>
+      <div class="space-y-3 border-b border-[var(--paper-line)] pb-5">
+        <label class="eyebrow block">Tambah Baru</label>
         <div class="grid grid-cols-4 gap-2">
-          <input type="text" id="cat-icon-input" placeholder="Emoji" class="term-input text-center">
-          <input type="text" id="cat-name-input" placeholder="Nama Kategori" class="term-input col-span-3">
+          <input type="text" id="cat-icon-input" placeholder="Icon" class="vintage-input text-center">
+          <input type="text" id="cat-name-input" placeholder="Nama Kategori" class="vintage-input col-span-3">
         </div>
-        <select id="cat-type-input" class="term-select">
+        <select id="cat-type-input" class="vintage-select">
           <option value="Pengeluaran">Pengeluaran</option>
           <option value="Pemasukan">Pemasukan</option>
         </select>
-        <button onclick="saveCategory()" class="term-btn term-btn-green w-full text-xs py-2">
-          [ + SIMPAN KATEGORI ]
+        <button onclick="saveCategory()" class="vintage-btn vintage-btn-primary w-full text-sm mt-2">
+          Simpan Kategori
         </button>
       </div>
       <div class="space-y-2">
-        <label class="term-title-sub block">DAFTAR KATEGORI AKTIF</label>
+        <label class="eyebrow block">Daftar Kategori</label>
         <div id="modal-category-list" class="space-y-2"></div>
       </div>
     </div>
@@ -502,83 +505,83 @@
 
   <!-- Modal Set / Edit Budget -->
   <div id="add-budget-modal" class="modal-overlay hidden">
-    <div class="term-box p-5 w-full max-w-md space-y-3">
-      <div class="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
-        <div class="term-title-sub">> SET TARGET BUDGET KATEGORI</div>
-        <button onclick="closeAddBudgetModal()" class="term-btn text-xs px-2 py-0.5">X</button>
+    <div class="vintage-card p-6 w-full max-w-md space-y-4">
+      <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
+        <div class="title-serif font-bold text-lg">Target Anggaran</div>
+        <button onclick="closeAddBudgetModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="term-title-sub block mb-1">PILIH KATEGORI</label>
-        <select id="budget-kategori-select" class="term-select"></select>
+        <label class="eyebrow block mb-1">Kategori</label>
+        <select id="budget-kategori-select" class="vintage-select"></select>
       </div>
       <div>
-        <label class="term-title-sub block mb-1">TARGET ANGGARAN (RP)</label>
-
-        <input type="text" id="budget-target-input" oninput="formatRupiahInput(this)" placeholder="0" class="term-input font-bold">
+        <label class="eyebrow block mb-1">Batas Maksimal (Rp)</label>
+        <input type="text" id="budget-target-input" oninput="formatRupiahInput(this)" placeholder="0" class="vintage-input font-bold text-lg text-[var(--gold)]">
       </div>
-      <button onclick="saveBudgetTarget()" class="term-btn term-btn-green w-full py-2.5 text-xs">
-        [ SIMPAN BUDGET ]
+      <button onclick="saveBudgetTarget()" class="vintage-btn vintage-btn-primary w-full py-3 mt-2">
+        Simpan Target
       </button>
     </div>
   </div>
 
   <!-- Modal Tambah Utang / Piutang -->
   <div id="add-debt-modal" class="modal-overlay hidden">
-    <div class="term-box p-5 w-full max-w-md space-y-3">
-      <div class="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
-        <div class="term-title-sub">> TAMBAH RECORD UTANG / PIUTANG</div>
-        <button onclick="closeAddDebtModal()" class="term-btn text-xs px-2 py-0.5">X</button>
+    <div class="vintage-card p-6 w-full max-w-md space-y-4">
+      <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
+        <div class="title-serif font-bold text-lg">Catat Utang/Piutang</div>
+        <button onclick="closeAddDebtModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="term-title-sub block mb-1">NAMA PIHAK TERKAIT</label>
-        <input type="text" id="debt-nama" class="term-input" placeholder="Contoh: Budi">
+        <label class="eyebrow block mb-1">Nama Pihak</label>
+        <input type="text" id="debt-nama" class="vintage-input" placeholder="Contoh: Budi">
       </div>
       <div>
-        <label class="term-title-sub block mb-1">JENIS RECORD</label>
-        <select id="debt-jenis" class="term-select">
+        <label class="eyebrow block mb-1">Jenis</label>
+        <select id="debt-jenis" class="vintage-select">
           <option value="Utang">Utang (Saya Pinjam Uang)</option>
-          <option value="Piutang">Piutang (Orang Pinjam Uang Saya)</option>
+          <option value="Piutang">Piutang (Orang Pinjam Uang)</option>
         </select>
       </div>
       <div>
-        <label class="term-title-sub block mb-1">TOTAL NOMINAL (RP)</label>
-        <input type="text" id="debt-nominal" oninput="formatRupiahInput(this)" class="term-input font-bold" placeholder="0">
+        <label class="eyebrow block mb-1">Total Nominal (Rp)</label>
+        <input type="text" id="debt-nominal" oninput="formatRupiahInput(this)" class="vintage-input font-bold text-[var(--gold)]" placeholder="0">
       </div>
       <div>
-        <label class="term-title-sub block mb-1">TANGGAL JATUH TEMPO</label>
-        <input type="date" id="debt-tempo" class="term-input">
+        <label class="eyebrow block mb-1">Jatuh Tempo</label>
+        <input type="date" id="debt-tempo" class="vintage-input">
       </div>
-      <button onclick="saveDebt()" class="term-btn term-btn-green w-full py-2.5 text-xs">
-        [ SIMPAN RECORD UTANG ]
+      <button onclick="saveDebt()" class="vintage-btn vintage-btn-primary w-full py-3 mt-2">
+        Simpan Catatan
       </button>
     </div>
   </div>
 
   <!-- Modal Cicil / Pelunasan Utang -->
   <div id="pay-debt-modal" class="modal-overlay hidden">
-    <div class="term-box p-5 w-full max-w-md space-y-3">
-      <div class="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
-        <div class="term-title-sub">> PEMBAYARAN / CICILAN RECORD</div>
-        <button onclick="closePayDebtModal()" class="term-btn text-xs px-2 py-0.5">X</button>
+    <div class="vintage-card p-6 w-full max-w-md space-y-4">
+      <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
+        <div class="title-serif font-bold text-lg">Pembayaran</div>
+        <button onclick="closePayDebtModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <input type="hidden" id="pay-debt-id">
-      <div class="text-xs text-[var(--text-muted)]" id="pay-debt-target-info">...</div>
+      <div class="text-sm font-medium p-3 bg-[var(--paper)] rounded border border-[var(--paper-line)] text-center" id="pay-debt-target-info">...</div>
       <div>
-        <label class="term-title-sub block mb-1">NOMINAL BAYAR (RP)</label>
-        <input type="text" id="pay-debt-nominal" oninput="formatRupiahInput(this)" class="term-input font-bold" placeholder="0">
+        <label class="eyebrow block mb-1">Nominal Bayar (Rp)</label>
+        <input type="text" id="pay-debt-nominal" oninput="formatRupiahInput(this)" class="vintage-input font-bold text-xl text-[var(--gold)] text-center" placeholder="0">
       </div>
-      <div class="flex items-center gap-2 pt-1">
-        <input type="checkbox" id="pay-debt-catat-saldo" checked class="accent-[var(--accent-green)]">
-        <label for="pay-debt-catat-saldo" class="text-xs font-bold">Catat Otomatis ke Transaksi Saldo Utang</label>
+      <div class="flex items-center gap-2 pt-2">
+        <input type="checkbox" id="pay-debt-catat-saldo" checked class="w-4 h-4 accent-[var(--gold)]">
+        <label for="pay-debt-catat-saldo" class="text-xs text-[var(--ink-soft)]">Otomatis kurangi/tambah saldo utama</label>
       </div>
-      <button onclick="processPayDebt()" class="term-btn term-btn-green w-full py-2.5 text-xs">
-        [ PROSES PEMBAYARAN ]
+      <button onclick="processPayDebt()" class="vintage-btn vintage-btn-primary w-full py-3 mt-2">
+        Proses Bayar
       </button>
     </div>
   </div>
 
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz313hGYl68r_No7YMh21nj-p-x6hsYiIu_BpbHOw6or02it0UrtpbR42uVeNHKX_yy/exec";
+    // URL Web App Istri 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzbrLfWi8ReV_xm9zLOZyCDbbaHamTihR_SviQca_tqXorYGO1g2CASQD_xIAg3gnpI8A/exec";
 
     async function callApi(action, payload = {}) {
       try {
@@ -606,11 +609,11 @@
     function getSwalConfig() {
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       return {
-        background: isDark ? '#121A16' : '#D8E8D5',
-        color: isDark ? '#00FF66' : '#1B3D2F',
-        confirmButtonColor: '#007A4D',
-        cancelButtonColor: '#C62828',
-        customClass: { popup: 'term-box' }
+        background: isDark ? '#1B2433' : '#FBF6EA',
+        color: isDark ? '#EAE3D2' : '#22314A',
+        confirmButtonColor: '#B8903B',
+        cancelButtonColor: isDark ? '#E06C55' : '#A6402F',
+        customClass: { popup: 'vintage-card' }
       };
     }
 
@@ -619,7 +622,6 @@
       return "Rp " + Number(number).toLocaleString("id-ID");
     }
 
-    // Auto dot separator handler for inputs
     function formatRupiahInput(inputEl) {
       let value = inputEl.value.replace(/\D/g, "");
       if (value) {
@@ -638,31 +640,34 @@
       const currentTheme = htmlEl.getAttribute('data-theme');
       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
       htmlEl.setAttribute('data-theme', nextTheme);
-      document.getElementById('theme-text-mob').innerText = nextTheme.toUpperCase();
-      document.getElementById('theme-text-desk').innerText = nextTheme.toUpperCase();
-      localStorage.setItem('rtk_theme', nextTheme);
+      
+      const themeText = nextTheme === 'dark' ? 'Terang' : 'Gelap';
+      document.getElementById('theme-text-desk').innerText = themeText;
+      
+      localStorage.setItem('istri_theme', nextTheme);
       if (myChart) renderExtra();
     }
 
     (function initTheme() {
-      const savedTheme = localStorage.getItem('rtk_theme') || 'dark';
+      const savedTheme = localStorage.getItem('istri_theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
-      document.getElementById('theme-text-mob').innerText = savedTheme.toUpperCase();
-      document.getElementById('theme-text-desk').innerText = savedTheme.toUpperCase();
+      document.getElementById('theme-text-desk').innerText = savedTheme === 'dark' ? 'Terang' : 'Gelap';
     })();
 
     function nav(viewId) {
       ['dashboard', 'history', 'input', 'plan', 'extra'].forEach(v => {
         document.getElementById(`view-${v}`).classList.add('hidden');
         const mobBtn = document.getElementById(`mob-nav-${v}`);
-        if (mobBtn) mobBtn.classList.remove('active', 'term-btn-green');
+        if (mobBtn && viewId !== 'input') mobBtn.classList.remove('active');
         const deskBtn = document.getElementById(`desk-nav-${v}`);
         if (deskBtn) deskBtn.classList.remove('active');
       });
 
       document.getElementById(`view-${viewId}`).classList.remove('hidden');
-      const activeMob = document.getElementById(`mob-nav-${viewId}`);
-      if (activeMob) activeMob.classList.add('active', 'term-btn-green');
+      if (viewId !== 'input') {
+          const activeMob = document.getElementById(`mob-nav-${viewId}`);
+          if (activeMob) activeMob.classList.add('active');
+      }
       const activeDesk = document.getElementById(`desk-nav-${viewId}`);
       if (activeDesk) activeDesk.classList.add('active');
 
@@ -676,8 +681,8 @@
       try {
         if (typeof Swal !== 'undefined') {
           Swal.fire({
-            title: 'Menghubungkan Server...',
-            text: 'Mengambil data dari RTK Wallet...',
+            title: 'Membuka Buku Kas...',
+            text: 'Mengambil data dari server',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
           });
@@ -689,9 +694,29 @@
         renderDashboard();
       } catch (err) {
         console.error("Error loading initial data:", err);
+        if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
+        
+        appData = {
+          transactions: [],
+          categories: [
+            { Nama_Kategori: 'Makanan & Minuman', Ikon: '🍔', Jenis: 'Pengeluaran' },
+            { Nama_Kategori: 'Transportasi', Ikon: '🚗', Jenis: 'Pengeluaran' },
+            { Nama_Kategori: 'Gaji', Ikon: '💰', Jenis: 'Pemasukan' }
+          ],
+          budgets: [],
+          debts: []
+        };
+        
         if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'error', title: 'Koneksi Gagal', text: 'Gagal mengambil data: ' + err.message });
+          Swal.fire({ 
+            ...getSwalConfig(), 
+            icon: 'warning', 
+            title: 'Koneksi Terputus', 
+            text: 'Gagal menghubungi Google Sheet (' + err.message + '). Membuka dengan Mode Simulasi.' 
+          });
         }
+        
+        populateCategoryDropdown();
         renderDashboard();
       }
     }
@@ -745,11 +770,16 @@
       const target = parseFloat(budget.Target_Anggaran) || 1;
       const percent = Math.min(Math.round((totalPemakaian / target) * 100), 100);
 
-      document.getElementById('dash-top-cat-title').innerText = `${catIcon} TARGET: ${catName.toUpperCase()}`;
+      document.getElementById('dash-top-cat-title').innerText = `${catIcon} Peringatan: ${catName}`;
       document.getElementById('dash-top-cat-detail').innerText = `${formatRupiah(totalPemakaian)} / ${formatRupiah(target)}`;
       document.getElementById('dash-top-cat-bar').style.width = `${percent}%`;
       document.getElementById('dash-top-cat-percent').innerText = `${percent}%`;
-      widgetContainer.classList.remove('hidden');
+      
+      if(percent >= 80) {
+          widgetContainer.classList.remove('hidden');
+      } else {
+          widgetContainer.classList.add('hidden');
+      }
     }
 
     function setJenis(jenis) {
@@ -757,11 +787,11 @@
       const btnPengeluaran = document.getElementById('btn-pengeluaran');
       const btnPemasukan = document.getElementById('btn-pemasukan');
       if (jenis === 'Pengeluaran') {
-        btnPengeluaran.className = "term-btn term-btn-red text-xs py-2.5";
-        btnPemasukan.className = "term-btn text-xs py-2.5 opacity-60";
+        btnPengeluaran.className = "vintage-btn text-xs py-2 vintage-btn-danger";
+        btnPemasukan.className = "vintage-btn text-xs py-2 opacity-50 bg-[var(--paper)] text-[var(--ink-soft)]";
       } else {
-        btnPengeluaran.className = "term-btn text-xs py-2.5 opacity-60";
-        btnPemasukan.className = "term-btn term-btn-green text-xs py-2.5";
+        btnPengeluaran.className = "vintage-btn text-xs py-2 opacity-50 bg-[var(--paper)] text-[var(--ink-soft)]";
+        btnPemasukan.className = "vintage-btn text-xs py-2 text-[var(--stamp-green)] border-[rgba(46,107,78,0.3)] bg-[rgba(46,107,78,0.05)]";
       }
       populateCategoryDropdown();
     }
@@ -780,7 +810,10 @@
 
     function quickSelect(kategori, catatan) {
       setJenis('Pengeluaran');
-      document.getElementById('input-kategori').value = kategori;
+      // If exact category missing, pick the first one roughly matching
+      let found = Array.from(document.getElementById('input-kategori').options).find(o => o.value.includes(kategori.split(' ')[0]));
+      if(found) document.getElementById('input-kategori').value = found.value;
+      
       document.getElementById('input-catatan').value = catatan;
       nav('input');
       document.getElementById('input-nominal').focus();
@@ -797,24 +830,24 @@
 
     function startVoiceInput() {
       if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        Swal.fire({ ...getSwalConfig(), title: 'Browser Tidak Mendukung', text: 'Gunakan Google Chrome di HP/PC.', icon: 'warning' });
+        Swal.fire({ ...getSwalConfig(), title: 'Tidak Didukung', text: 'Fitur suara butuh browser Chrome/Safari modern.', icon: 'warning' });
         return;
       }
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.lang = 'id-ID';
       const btnMic = document.getElementById('btn-mic-input');
-      btnMic.innerText = '🔴 MENDENGARKAN...';
+      btnMic.innerHTML = '<i class="fa-solid fa-microphone-lines-slash text-red-500"></i> Mendengar...';
       recognition.start();
 
       recognition.onresult = function(event) {
-        btnMic.innerText = '🎤 [ MIC / SUARA ]';
+        btnMic.innerHTML = '<i class="fa-solid fa-microphone mr-1"></i> Suara';
         const transcript = event.results[0][0].transcript;
         document.getElementById('smart-text-input').value = transcript;
         sendSmartInputToBackend('text', transcript);
       };
-      recognition.onerror = function() { btnMic.innerText = '🎤 [ MIC / SUARA ]'; };
-      recognition.onend = function() { btnMic.innerText = '🎤 [ MIC / SUARA ]'; };
+      recognition.onerror = function() { btnMic.innerHTML = '<i class="fa-solid fa-microphone mr-1"></i> Suara'; };
+      recognition.onend = function() { btnMic.innerHTML = '<i class="fa-solid fa-microphone mr-1"></i> Suara'; };
     }
 
     function handleStrukUpload(event) {
@@ -875,7 +908,7 @@
       if (data.catatan) document.getElementById('input-catatan').value = data.catatan;
       if (data.tanggal) document.getElementById('input-tanggal').value = data.tanggal;
 
-      Swal.fire({ ...getSwalConfig(), title: '🤖 Data Terisi!', text: 'Form otomatis terisi Gemini AI.', icon: 'success', timer: 1500, showConfirmButton: false });
+      Swal.fire({ ...getSwalConfig(), title: 'Selesai!', text: 'Form otomatis terisi oleh AI.', icon: 'success', timer: 1500, showConfirmButton: false });
     }
 
     function fallbackManualRegexParsing(text) {
@@ -905,14 +938,14 @@
       }
 
       try {
-        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Mencatat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         await callApi('saveTransaction', { tanggal: tanggal, jenis: currentJenisInput, kategori: kategori, nominal: nominal, catatan: catatan });
         document.getElementById('input-nominal').value = '';
         document.getElementById('input-catatan').value = '';
         document.getElementById('smart-text-input').value = '';
         await loadInitialData();
         nav('dashboard');
-        Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Transaksi disimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
+        Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan tersimpan di Buku Kas!', icon: 'success', timer: 1200, showConfirmButton: false });
       } catch (err) {
         Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
       }
@@ -932,22 +965,24 @@
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center text-xs text-[var(--text-muted)] py-6">> TIDAK ADA RECORD TRANSAKSI <</div>`;
+        container.innerHTML = `<div class="text-center text-sm text-[var(--ink-soft)] py-8 font-medium">Belum ada catatan di bulan ini.</div>`;
         return;
       }
 
       filtered.forEach(t => {
         const isIncome = t.Jenis === 'Pemasukan';
+        const textColorClass = isIncome ? 'text-[var(--stamp-green)]' : 'text-[var(--stamp-red)]';
+        
         const item = document.createElement('div');
-        item.className = 'flex justify-between items-center py-2 border-b border-dashed border-[var(--border-color)] text-xs';
+        item.className = 'flex justify-between items-center py-3 border-b border-dashed border-[var(--paper-line)]';
         item.innerHTML = `
           <div>
-            <div class="font-bold text-[var(--text-main)]">${t.Kategori}</div>
-            <div class="text-[10px] text-[var(--text-muted)]">${t.Tanggal} • ${t.Catatan || '-'}</div>
+            <div class="font-bold text-sm text-[var(--ink)]">${t.Kategori}</div>
+            <div class="text-[11px] text-[var(--ink-soft)] text-mono mt-0.5">${t.Tanggal} • ${t.Catatan || '-'}</div>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="font-bold ${isIncome ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}">${isIncome ? '+' : '-'}${formatRupiah(t.Nominal)}</span>
-            <button onclick="deleteTx('${t.ID_Transaksi}')" class="text-[var(--accent-red)] hover:underline font-bold text-sm">🗑️</button>
+          <div class="flex items-center gap-4">
+            <span class="font-bold text-mono ${textColorClass}">${isIncome ? '+' : '-'}${formatRupiah(t.Nominal)}</span>
+            <button onclick="deleteTx('${t.ID_Transaksi}')" class="text-[var(--ink-soft)] hover:text-[var(--stamp-red)] text-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         `;
         container.appendChild(item);
@@ -956,14 +991,14 @@
 
     function deleteTx(id) {
       Swal.fire({
-        ...getSwalConfig(), title: 'Hapus Transaksi?', text: 'Data akan dihapus permanen.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Hapus'
+        ...getSwalConfig(), title: 'Hapus Catatan?', text: 'Coretan ini akan dihapus permanen.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Hapus'
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
             Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             await callApi('deleteTransaction', id);
             await loadInitialData();
-            Swal.fire({ ...getSwalConfig(), title: 'Terhapus!', icon: 'success', timer: 1200, showConfirmButton: false });
+            Swal.fire({ ...getSwalConfig(), title: 'Dihapus!', icon: 'success', timer: 1200, showConfirmButton: false });
           } catch (err) {
             Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
           }
@@ -988,21 +1023,19 @@
         const percent = targetVal > 0 ? Math.min(Math.round((usedVal / targetVal) * 100), 100) : 0;
 
         const card = document.createElement('div');
-        card.className = 'term-box p-3 space-y-2';
+        card.className = 'border border-[var(--paper-line)] rounded-lg p-3 space-y-2 bg-[var(--paper)]';
         card.innerHTML = `
-          <div class="flex justify-between items-center text-xs">
-            <span class="font-bold">${cat.Ikon || '📌'} ${cat.Nama_Kategori}</span>
-            <span class="text-[var(--text-muted)]">Target: ${formatRupiah(targetVal)}</span>
+          <div class="flex justify-between items-center text-sm">
+            <span class="font-bold text-[var(--ink)]">${cat.Ikon || '📌'} ${cat.Nama_Kategori}</span>
+            <span class="text-[var(--ink-soft)] text-xs font-medium">Target: ${formatRupiah(targetVal)}</span>
           </div>
-          <div class="top-budget-bar-bg">
-            <div class="top-budget-bar-fill" style="width: ${percent}%;">
-              <span class="top-budget-bar-percent">${percent}%</span>
-            </div>
+          <div class="budget-bar-bg">
+            <div class="budget-bar-fill ${percent > 90 ? '!bg-[var(--stamp-red)]' : ''}" style="width: ${percent}%;"></div>
           </div>
-          <div class="flex justify-between items-center text-[10px] text-[var(--text-muted)]">
-            <span>Terpakai Bulan Ini: ${formatRupiah(usedVal)}</span>
-            <button onclick="editBudget('${cat.Nama_Kategori}', ${targetVal})" class="term-btn text-[10px] px-2 py-0.5">
-              [ SET TARGET ]
+          <div class="flex justify-between items-center text-[11px] text-[var(--ink-soft)]">
+            <span class="text-mono">Terpakai: ${formatRupiah(usedVal)} (${percent}%)</span>
+            <button onclick="editBudget('${cat.Nama_Kategori}', ${targetVal})" class="text-[var(--gold)] font-medium hover:underline">
+              Edit
             </button>
           </div>
         `;
@@ -1044,7 +1077,7 @@
         closeAddBudgetModal();
         await loadInitialData();
         renderPlan();
-        Swal.fire({ ...getSwalConfig(), title: 'Berhasil!', text: `Budget ${kategori} tersimpan!`, icon: 'success', timer: 1200, showConfirmButton: false });
+        Swal.fire({ ...getSwalConfig(), title: 'Berhasil!', text: `Anggaran ${kategori} tersimpan.`, icon: 'success', timer: 1200, showConfirmButton: false });
       } catch (err) {
         Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
       }
@@ -1066,36 +1099,47 @@
         type: 'doughnut',
         data: {
           labels: Object.keys(catMap).length > 0 ? Object.keys(catMap) : ['Belum Ada Transaksi'],
-          datasets: [{ data: Object.values(catMap).length > 0 ? Object.values(catMap) : [1], backgroundColor: ['#00FF66', '#FF4D4D', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6'] }]
+          datasets: [{ 
+            data: Object.values(catMap).length > 0 ? Object.values(catMap) : [1], 
+            backgroundColor: ['#D4AF37', '#E06C55', '#3E8E68', '#6B7280', '#A6402F'],
+            borderColor: isDark ? '#121824' : '#FBF6EA',
+            borderWidth: 2
+          }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: isDark ? '#00FF66' : '#1B3D2F', font: { family: 'Share Tech Mono' } } } } }
+        options: { 
+          responsive: true, maintainAspectRatio: false, 
+          plugins: { 
+            legend: { labels: { color: isDark ? '#EAE3D2' : '#22314A', font: { family: 'IBM Plex Mono' } } } 
+          } 
+        }
       });
 
       const debtContainer = document.getElementById('debt-list');
       debtContainer.innerHTML = '';
       if (!appData.debts || appData.debts.length === 0) {
-        debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--text-muted)] py-4">> BELUM ADA RECORD UTANG / PIUTANG <</div>`;
+        debtContainer.innerHTML = `<div class="text-center text-sm font-medium text-[var(--ink-soft)] py-4">Belum ada catatan utang.</div>`;
         return;
       }
 
       appData.debts.forEach(d => {
         const isLunas = d.Status === 'Lunas';
         const card = document.createElement('div');
-        card.className = 'term-box p-3 space-y-2 text-xs';
+        card.className = 'border border-[var(--paper-line)] rounded-lg p-4 space-y-2 bg-[var(--paper)]';
         card.innerHTML = `
-          <div class="flex justify-between items-center">
-            <span class="font-bold">${(d.Jenis || '').toUpperCase()}: ${d.Nama_Pemberi_Pinjaman || d.Nama}</span>
-            <span class="term-btn text-[10px] px-2 py-0.5 ${isLunas ? 'term-btn-green' : 'term-btn-red'}">${d.Status}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-muted)]">
-            <div>Total: ${formatRupiah(d.Total_Utang || d.Nominal)}</div>
-            <div>Sisa: <b class="text-[var(--accent-red)]">${formatRupiah(d.Sisa_Utang !== undefined ? d.Sisa_Utang : d.Nominal)}</b></div>
-          </div>
-          <div class="flex justify-between items-center pt-2 border-t border-dashed border-[var(--border-color)]">
-            <span class="text-[10px] text-[var(--text-muted)]">Tempo: ${d.Tanggal_Jatuh_Tempo || d.Tempo || '-'}</span>
-            <div class="flex gap-2">
-              ${!isLunas ? `<button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman || d.Nama}', ${d.Sisa_Utang || d.Nominal})" class="term-btn term-btn-green text-[10px] px-2 py-0.5">[ BAYAR ]</button>` : ''}
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${d.Jenis}</div>
+              <div class="font-bold text-sm text-[var(--ink)]">${d.Nama_Pemberi_Pinjaman || d.Nama}</div>
             </div>
+            <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] text-mono py-1">
+            <div>Total: ${formatRupiah(d.Total_Utang || d.Nominal)}</div>
+            <div>Sisa: <b class="text-[var(--stamp-red)]">${formatRupiah(d.Sisa_Utang !== undefined ? d.Sisa_Utang : d.Nominal)}</b></div>
+          </div>
+          <div class="flex justify-between items-center pt-2 border-t border-[var(--paper-line)]">
+            <span class="text-[11px] text-[var(--ink-soft)]">Tempo: ${d.Tanggal_Jatuh_Tempo || d.Tempo || '-'}</span>
+            ${!isLunas ? `<button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman || d.Nama}', ${d.Sisa_Utang || d.Nominal})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar</button>` : ''}
           </div>
         `;
         debtContainer.appendChild(card);
@@ -1112,12 +1156,12 @@
       const tempo = document.getElementById('debt-tempo').value;
 
       if (!nama || nominal <= 0) {
-        Swal.fire({ ...getSwalConfig(), title: 'Input Inkomplit', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
+        Swal.fire({ ...getSwalConfig(), title: 'Data Kurang', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
         return;
       }
 
       try {
-        Swal.fire({ title: 'Menyimpan Utang...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Menyimpan Catatan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         await callApi('addDebt', { nama: nama, jenis: jenis, totalUtang: nominal, jatuhTempo: tempo });
         closeAddDebtModal();
         document.getElementById('debt-nama').value = '';
@@ -1143,7 +1187,7 @@
 
       if (!nominal || nominal <= 0) return;
       try {
-        Swal.fire({ title: 'Memproses Pembayaran...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         await callApi('payDebt', { id: id, nominal: nominal, catatSaldo: catatSaldo });
         closePayDebtModal();
         document.getElementById('pay-debt-nominal').value = '';
@@ -1165,10 +1209,10 @@
       container.innerHTML = '';
       appData.categories.forEach(c => {
         const row = document.createElement('div');
-        row.className = 'flex justify-between items-center text-xs p-2 term-box';
+        row.className = 'flex justify-between items-center text-sm py-2 px-3 border border-[var(--paper-line)] bg-[var(--paper)] rounded';
         row.innerHTML = `
-          <span>${c.Ikon || '📌'} ${c.Nama_Kategori} (${c.Jenis})</span>
-          <button onclick="deleteCategory('${c.Nama_Kategori}')" class="term-btn term-btn-red text-[10px] px-2 py-0.5">🗑️</button>
+          <span>${c.Ikon || '📌'} ${c.Nama_Kategori} <span class="text-[10px] text-[var(--ink-soft)] ml-1">(${c.Jenis})</span></span>
+          <button onclick="deleteCategory('${c.Nama_Kategori}')" class="text-[var(--stamp-red)] p-1"><i class="fa-solid fa-trash-can"></i></button>
         `;
         container.appendChild(row);
       });
@@ -1182,12 +1226,12 @@
 
       try {
         Swal.fire({ title: 'Menyimpan Kategori...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        await callApi('saveCategory', { Ikon: ikon, Nama_Kategori: nama, Jenis: jenis, Warna_Badge: '#FFB6A6' });
+        await callApi('saveCategory', { Ikon: ikon, Nama_Kategori: nama, Jenis: jenis, Warna_Badge: '#B8903B' });
         document.getElementById('cat-name-input').value = '';
         document.getElementById('cat-icon-input').value = '';
         await loadInitialData();
         renderCategoryListModal();
-        Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: `Kategori ${nama} tersimpan!`, icon: 'success', timer: 1200, showConfirmButton: false });
+        Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: `Kategori ${nama} ditambahkan.`, icon: 'success', timer: 1200, showConfirmButton: false });
       } catch (err) {
         Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
       }
@@ -1208,9 +1252,9 @@
     async function triggerAIAnalysis() {
       Swal.fire({
         ...getSwalConfig(),
-        title: '🤖 Bobib AI Terminal',
-        html: '<div class="p-3 text-left text-xs leading-relaxed" id="ai-modal-content">> Mengambil analisis keuangan bulan ini...<span class="cursor-blink">█</span></div>',
-        showConfirmButton: true, confirmButtonText: '[ TUTUP ]'
+        title: 'Asisten AI',
+        html: '<div class="text-left text-sm leading-relaxed p-2 text-mono" id="ai-modal-content">Sedang menganalisa buku catatan bulan ini...</div>',
+        showConfirmButton: true, confirmButtonText: 'Tutup'
       });
 
       const now = new Date();
@@ -1242,10 +1286,10 @@
           topKategori: topCat, topNominal: topNominal.toLocaleString('id-ID')
         });
         const el = document.getElementById('ai-modal-content');
-        if (el) el.innerHTML = `> ${aiRes}<span class="cursor-blink">█</span>`;
+        if (el) el.innerHTML = `${aiRes}`;
       } catch (err) {
         const el = document.getElementById('ai-modal-content');
-        if (el) el.innerHTML = `> Pengeluaran berjalan stabil. Terus catat rutin ya brow!<span class="cursor-blink">█</span>`;
+        if (el) el.innerHTML = `Pencatatan bulan ini terlihat rapi. Pertahankan kebiasaan mencatatmu!`;
       }
     }
 
