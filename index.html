@@ -585,12 +585,16 @@
       if (myChart) renderExtra();
     }
 
-    (function initTheme() {
+    // 1. Inisialisasi Tema
+    function initTheme() {
       const savedTheme = localStorage.getItem('istri_theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
-      document.getElementById('theme-text-desk').innerText = savedTheme === 'dark' ? 'Terang' : 'Gelap';
-    })();
+      const deskEl = document.getElementById('theme-text-desk');
+      if (deskEl) deskEl.innerText = savedTheme === 'dark' ? 'Terang' : 'Gelap';
+    }
+    initTheme(); // Jalankan fungsi tema
 
+    // 2. Fungsi Navigasi Tab (Dibuat Global)
     function nav(viewId) {
       ['dashboard', 'history', 'input', 'plan', 'extra'].forEach(v => {
         const viewEl = document.getElementById(`view-${v}`);
@@ -620,6 +624,7 @@
       if (viewId === 'extra' && typeof renderExtra === 'function') renderExtra();
     }
 
+    // 3. Fungsi Load Data Awal
     async function loadInitialData() {
       try {
         if (typeof Swal !== 'undefined') {
@@ -633,8 +638,8 @@
         const data = await callApi('getInitialData');
         appData = data || { transactions: [], categories: [], budgets: [], debts: [] };
         if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
-        populateCategoryDropdown();
-        renderDashboard();
+        if (typeof populateCategoryDropdown === 'function') populateCategoryDropdown();
+        if (typeof renderDashboard === 'function') renderDashboard();
       } catch (err) {
         console.error("Error loading initial data:", err);
         if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
@@ -650,11 +655,10 @@
           debts: []
         };
         
-        populateCategoryDropdown();
-        renderDashboard();
+        if (typeof populateCategoryDropdown === 'function') populateCategoryDropdown();
+        if (typeof renderDashboard === 'function') renderDashboard();
       }
     }
-
     function renderDashboard() {
       let totalMasukAll = 0, totalKeluarAll = 0;
       let totalMasukBulan = 0, totalKeluarBulan = 0;
