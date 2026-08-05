@@ -278,7 +278,7 @@
         </div>
       </div>
 
-      <!-- All time summary hidden for cleaner UI, but variables remain for JS to run -->
+      <!-- All time summary hidden for cleaner UI -->
       <div class="hidden">
         <div id="dash-pemasukan"></div>
         <div id="dash-pengeluaran"></div>
@@ -623,7 +623,7 @@
     }
 
     function formatRupiahInput(inputEl) {
-      let value = inputEl.value.replace(/\D/g, "");
+      let value = String(inputEl.value || '').replace(/\D/g, "");
       if (value) {
         inputEl.value = Number(value).toLocaleString("id-ID");
       } else {
@@ -632,6 +632,7 @@
     }
 
     function getUnformattedNominal(formattedVal) {
+      if (!formattedVal) return 0;
       return parseFloat(formattedVal.toString().replace(/\D/g, "")) || 0;
     }
 
@@ -701,7 +702,7 @@
           categories: [
             { Nama_Kategori: 'Makanan & Minuman', Ikon: '🍔', Jenis: 'Pengeluaran' },
             { Nama_Kategori: 'Transportasi', Ikon: '🚗', Jenis: 'Pengeluaran' },
-            { Nama_Kategori: 'Gaji', Ikon: '💰', Jenis: 'Pemasukan' }
+            { Nama_Kategori: 'Gaji & Pendapatan', Ikon: '💰', Jenis: 'Pemasukan' }
           ],
           budgets: [],
           debts: []
@@ -810,7 +811,6 @@
 
     function quickSelect(kategori, catatan) {
       setJenis('Pengeluaran');
-      // If exact category missing, pick the first one roughly matching
       let found = Array.from(document.getElementById('input-kategori').options).find(o => o.value.includes(kategori.split(' ')[0]));
       if(found) document.getElementById('input-kategori').value = found.value;
       
@@ -920,8 +920,11 @@
         let unit = matchRibuan[2].toLowerCase();
         if (['ribu', 'rb', 'k'].includes(unit)) num *= 1000;
         if (['juta', 'jt'].includes(unit)) num *= 1000000;
-        document.getElementById('input-nominal').value = num;
-        formatRupiahInput(document.getElementById('input-nominal'));
+        if (!isNaN(num)) {
+          const inputNominal = document.getElementById('input-nominal');
+          inputNominal.value = String(num);
+          formatRupiahInput(inputNominal);
+        }
       }
       document.getElementById('input-catatan').value = text;
     }
@@ -1024,6 +1027,12 @@
 
         const card = document.createElement('div');
         card.className = 'border border-[var(--paper-line)] rounded-lg p-3 space-y-2 bg-[var(--paper)]';
+        
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'text-[var(--gold)] font-medium hover:underline';
+        btnEdit.innerText = 'Edit';
+        btnEdit.onclick = function() { editBudget(cat.Nama_Kategori, targetVal); };
+
         card.innerHTML = `
           <div class="flex justify-between items-center text-sm">
             <span class="font-bold text-[var(--ink)]">${cat.Ikon || '📌'} ${cat.Nama_Kategori}</span>
@@ -1034,12 +1043,12 @@
           </div>
           <div class="flex justify-between items-center text-[11px] text-[var(--ink-soft)]">
             <span class="text-mono">Terpakai: ${formatRupiah(usedVal)} (${percent}%)</span>
-            <button onclick="editBudget('${cat.Nama_Kategori}', ${targetVal})" class="text-[var(--gold)] font-medium hover:underline">
-              Edit
-            </button>
+            <div id="btn-edit-container-${cat.Nama_Kategori.replace(/\s+/g, '-')}"></div>
           </div>
         `;
         container.appendChild(card);
+        const actionContainer = card.querySelector(`[id^="btn-edit-container-"]`);
+        if (actionContainer) actionContainer.appendChild(btnEdit);
       });
     }
 
@@ -1061,7 +1070,9 @@
     function editBudget(catName, currentTarget) {
       openAddBudgetModal();
       document.getElementById('budget-kategori-select').value = catName;
-      document.getElementById('budget-target-input').value = currentTarget > 0 ? Number(currentTarget).toLocaleString('id-ID') : '';
+      const inputTarget = document.getElementById('budget-target-input');
+      inputTarget.value = currentTarget > 0 ? String(currentTarget) : '';
+      formatRupiahInput(inputTarget);
     }
 
     async function saveBudgetTarget() {
@@ -1210,10 +1221,14 @@
       appData.categories.forEach(c => {
         const row = document.createElement('div');
         row.className = 'flex justify-between items-center text-sm py-2 px-3 border border-[var(--paper-line)] bg-[var(--paper)] rounded';
-        row.innerHTML = `
-          <span>${c.Ikon || '📌'} ${c.Nama_Kategori} <span class="text-[10px] text-[var(--ink-soft)] ml-1">(${c.Jenis})</span></span>
-          <button onclick="deleteCategory('${c.Nama_Kategori}')" class="text-[var(--stamp-red)] p-1"><i class="fa-solid fa-trash-can"></i></button>
-        `;
+        
+        const btnDel = document.createElement('button');
+        btnDel.className = 'text-[var(--stamp-red)] p-1';
+        btnDel.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        btnDel.onclick = function() { deleteCategory(c.Nama_Kategori); };
+
+        row.innerHTML = `<span>${c.Ikon || '📌'} ${c.Nama_Kategori} <span class="text-[10px] text-[var(--ink-soft)] ml-1">(${c.Jenis})</span></span>`;
+        row.appendChild(btnDel);
         container.appendChild(row);
       });
     }
