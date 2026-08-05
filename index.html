@@ -279,18 +279,22 @@
         </div>
       </div>
 
+      <!-- WADAH TOP 3 PENGELUARAN TERBESAR -->
+      <div class="mt-6 mb-8">
+        <div class="flex items-center gap-2 mb-3">
+          <h2 id="critical-budget-title" class="text-xs font-bold text-[var(--ink)] tracking-widest uppercase">TOP 3 PENGELUARAN TERBESAR</h2>
+        </div>
+        <div class="vintage-card">
+          <div id="critical-budget-list" class="flex flex-col">
+            <!-- Akan diisi otomatis oleh JavaScript -->
+          </div>
+        </div>
+      </div>
+
       <!-- Hidden All-Time Summaries for Compatibility -->
       <div class="hidden">
         <div id="dash-pemasukan"></div>
         <div id="dash-pengeluaran"></div>
-      </div>
-
-      <!-- Top 3 Budget Kritis Widget -->
-      <div id="dash-top-cat" class="hidden vintage-card p-4 space-y-3">
-        <div class="eyebrow border-b border-[var(--paper-line)] pb-2">
-          📌 Target Anggaran Kritis (Top 3)
-        </div>
-        <div id="dash-budget-list-container" class="space-y-3"></div>
       </div>
     </section>
 
@@ -774,7 +778,6 @@
       
       // ============================================================
       // LOGIKA BARU: TOP 3 PENGELUARAN TERBESAR
-      // Menggantikan renderTopBudgetWidget(currentMonthStr);
       // ============================================================
       
       // Urutkan dari nominal terbesar ke terkecil, lalu potong ambil 3 teratas
