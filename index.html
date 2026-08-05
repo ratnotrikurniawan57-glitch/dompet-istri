@@ -1120,12 +1120,72 @@
               fill: true,
               tension: 0.3,
               pointBackgroundColor: themeColor,
-              pointRadius: 3
+              pointRadius: 4,
+              pointHoverRadius: 7
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            // --- LOGIKA KLIK TITIK GRAFIK PADA FITUR BARU ---
+            onClick: (event, elements) => {
+              if (elements.length > 0) {
+                const index = elements[0].index;
+                const clickedDay = index + 1;
+                const dayStr = clickedDay < 10 ? '0' + clickedDay : '' + clickedDay;
+                const fullTargetDate = `${selectedMonthStr}-${dayStr}`;
+
+                // Filter transaksi khusus pada tanggal yang diklik
+                const dayTransactions = appData.transactions.filter(t => 
+                  t.Jenis === 'Pengeluaran' && (t.Tanggal || '').slice(0, 10) === fullTargetDate
+                );
+
+                if (dayTransactions.length === 0) {
+                  Swal.fire({
+                    ...getSwalConfig(),
+                    title: `Tanggal ${clickedDay}`,
+                    text: 'Tidak ada catatan pengeluaran di tanggal ini.',
+                    icon: 'info'
+                  });
+                  return;
+                }
+
+                // Susun daftar item pengeluaran
+                let totalHari = 0;
+                let htmlList = `<div class="text-left text-xs space-y-2 mt-2">`;
+                dayTransactions.forEach(t => {
+                  const nom = parseFloat(t.Nominal) || 0;
+                  totalHari += nom;
+                  const catObj = appData.categories.find(c => c.Nama_Kategori === t.Kategori);
+                  const icon = catObj ? catObj.Ikon : '📌';
+
+                  htmlList += `
+                    <div class="flex justify-between items-center p-2 border-b border-dashed border-[var(--paper-line)]">
+                      <div>
+                        <div class="font-bold text-[var(--ink)]">${icon} ${t.Kategori}</div>
+                        <div class="text-[10px] text-[var(--ink-soft)] font-mono">${t.Catatan || '-'}</div>
+                      </div>
+                      <div class="font-bold font-mono text-[var(--stamp-red)]">${formatRupiah(nom)}</div>
+                    </div>`;
+                });
+
+                htmlList += `
+                  <div class="flex justify-between items-center font-bold pt-2 text-sm text-[var(--ink)]">
+                    <span>TOTAL:</span>
+                    <span class="text-[var(--stamp-red)]">${formatRupiah(totalHari)}</span>
+                  </div>
+                </div>`;
+
+                // Tampilkan Pop-up Vintage
+                Swal.fire({
+                  ...getSwalConfig(),
+                  title: `📌 Rincian Tgl ${clickedDay}`,
+                  html: htmlList,
+                  showConfirmButton: true,
+                  confirmButtonText: 'Tutup'
+                });
+              }
+            },
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -1151,6 +1211,41 @@
           }
         });
       }
+
+      // Render Daftar Utang / Piutang Khusus Tab Extra
+      const debtContainer = document.getElementById('debt-list');
+      if (debtContainer) {
+        debtContainer.innerHTML = '';
+        if (!appData.debts || appData.debts.length === 0) {
+          debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--ink-soft)] py-4">Belum ada catatan utang.</div>`;
+          return;
+        }
+
+        appData.debts.forEach(d => {
+          const isLunas = d.Status === 'Lunas';
+          const card = document.createElement('div');
+          card.className = 'vintage-card p-4 space-y-2';
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="eyebrow text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${d.Jenis}</div>
+                <div class="font-bold text-sm text-[var(--ink)]">${d.Nama_Pemberi_Pinjaman || d.Nama}</div>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] font-mono py-1">
+              <div>Total: ${formatRupiah(d.Total_Utang || d.Nominal)}</div>
+              <div>Sisa: <b class="text-[var(--stamp-red)]">${formatRupiah(d.Sisa_Utang !== undefined ? d.Sisa_Utang : d.Nominal)}</b></div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-[var(--paper-line)]">
+              <span class="text-[11px] text-[var(--ink-soft)]">Tempo: ${d.Tanggal_Jatuh_Tempo || d.Tempo || '-'}</span>
+              ${!isLunas ? `<button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman || d.Nama}', ${d.Sisa_Utang || d.Nominal})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar</button>` : ''}
+            </div>
+          `;
+          debtContainer.appendChild(card);
+        });
+      }
+    }
 
       // Render Debt Records
       const debtContainer = document.getElementById('debt-list');
