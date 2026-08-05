@@ -169,6 +169,7 @@
 
 <body class="flex flex-col md:flex-row min-h-screen">
 
+  <!-- Desktop Sidebar -->
   <aside class="hidden md:flex flex-col w-64 bg-[var(--card-bg)] border-r border-[var(--paper-line)] p-6 space-y-8 z-30 shadow-lg">
     <div class="text-center pb-4 border-b border-[var(--gold)]">
       <div class="eyebrow">Catatan Harian</div>
@@ -222,6 +223,7 @@
       </div>
     </div>
 
+    <!-- VIEW 1: DASHBOARD -->
     <section id="view-dashboard" class="space-y-6">
       
       <!-- Stamp Saldo -->
@@ -250,13 +252,7 @@
         </div>
       </div>
 
-      <!-- Hidden all time placeholders -->
-      <div class="hidden">
-        <div id="dash-pemasukan"></div>
-        <div id="dash-pengeluaran"></div>
-      </div>
-
-      <!-- Top 3 Budget Kritis Widget (Warna Tema Vintage Paper) -->
+      <!-- Top 3 Budget Kritis Widget (Gold Theme Color) -->
       <div id="dash-top-cat" class="hidden vintage-card p-4 space-y-3">
         <div class="eyebrow border-b border-[var(--paper-line)] pb-2 text-[var(--gold)] font-bold">
           📌 Target Anggaran Kritis (Top 3)
@@ -266,6 +262,7 @@
 
     </section>
 
+    <!-- VIEW 2: INPUT TRANSAKSI -->
     <section id="view-input" class="hidden space-y-5">
       <div class="vintage-card p-5 space-y-4">
         <div class="title-serif font-bold text-lg border-b border-[var(--paper-line)] pb-2">
@@ -333,6 +330,7 @@
       </div>
     </section>
 
+    <!-- VIEW 3: RIWAYAT -->
     <section id="view-history" class="hidden space-y-4">
       <div class="vintage-card p-3 grid grid-cols-2 gap-3">
         <input type="month" id="filter-month" class="vintage-input text-xs" onchange="renderHistory()">
@@ -351,6 +349,7 @@
       </div>
     </section>
 
+    <!-- VIEW 4: RENCANA BUDGET -->
     <section id="view-plan" class="hidden space-y-4">
       <div class="vintage-card p-5">
         <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2 mb-4">
@@ -366,13 +365,15 @@
       </div>
     </section>
 
+    <!-- VIEW 5: UTANG & GRAFIK -->
     <section id="view-extra" class="hidden space-y-6">
       <div class="vintage-card p-5 space-y-3">
         <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
           <div class="title-serif font-bold text-lg">Grafik Trend Pengeluaran</div>
           <input type="month" id="extra-filter-month" class="vintage-input text-xs w-auto py-1 px-2" onchange="renderExtra()">
         </div>
-        <div class="relative w-full h-56 mt-4">
+        <p class="text-[11px] text-[var(--ink-soft)] italic">* Klik titik tanggal pada grafik untuk melihat rincian pengeluaran hari tersebut.</p>
+        <div class="relative w-full h-56 mt-2">
           <canvas id="expenseChart"></canvas>
         </div>
       </div>
@@ -394,6 +395,7 @@
     <i class="fa-solid fa-wand-magic-sparkles"></i>
   </button>
 
+  <!-- Mobile Navigation -->
   <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[var(--card-bg)] border-t border-[var(--paper-line)] px-2 pb-5 pt-3 z-40 flex justify-around items-center shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
     <div onclick="nav('dashboard')" id="mob-nav-dashboard" class="nav-item flex flex-col items-center gap-1 active cursor-pointer w-16">
       <i class="fa-solid fa-book-open text-lg"></i>
@@ -416,6 +418,7 @@
     </div>
   </nav>
 
+  <!-- Modals -->
   <div id="category-modal" class="modal-overlay hidden">
     <div class="vintage-card p-5 w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
@@ -572,6 +575,21 @@
       return parseFloat(formattedVal.toString().replace(/\D/g, "")) || 0;
     }
 
+    // Helper Parser Tanggal agar akurat YYYY-MM-DD
+    function parseDateToYMD(dateStr) {
+      if (!dateStr) return '';
+      let str = String(dateStr).trim();
+      if (str.match(/^\d{4}-\d{2}-\d{2}/)) return str.slice(0, 10);
+      let d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        let y = d.getFullYear();
+        let m = String(d.getMonth() + 1).padStart(2, '0');
+        let day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+      return str.slice(0, 10);
+    }
+
     function toggleTheme() {
       const htmlEl = document.documentElement;
       const currentTheme = htmlEl.getAttribute('data-theme');
@@ -579,22 +597,21 @@
       htmlEl.setAttribute('data-theme', nextTheme);
       
       const themeText = nextTheme === 'dark' ? 'Terang' : 'Gelap';
-      document.getElementById('theme-text-desk').innerText = themeText;
+      const deskEl = document.getElementById('theme-text-desk');
+      if (deskEl) deskEl.innerText = themeText;
       
       localStorage.setItem('istri_theme', nextTheme);
       if (myChart) renderExtra();
     }
 
-    // 1. Inisialisasi Tema
     function initTheme() {
       const savedTheme = localStorage.getItem('istri_theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
       const deskEl = document.getElementById('theme-text-desk');
       if (deskEl) deskEl.innerText = savedTheme === 'dark' ? 'Terang' : 'Gelap';
     }
-    initTheme(); // Jalankan fungsi tema
+    initTheme();
 
-    // 2. Fungsi Navigasi Tab (Dibuat Global)
     function nav(viewId) {
       ['dashboard', 'history', 'input', 'plan', 'extra'].forEach(v => {
         const viewEl = document.getElementById(`view-${v}`);
@@ -624,7 +641,6 @@
       if (viewId === 'extra' && typeof renderExtra === 'function') renderExtra();
     }
 
-    // 3. Fungsi Load Data Awal
     async function loadInitialData() {
       try {
         if (typeof Swal !== 'undefined') {
@@ -638,8 +654,8 @@
         const data = await callApi('getInitialData');
         appData = data || { transactions: [], categories: [], budgets: [], debts: [] };
         if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
-        if (typeof populateCategoryDropdown === 'function') populateCategoryDropdown();
-        if (typeof renderDashboard === 'function') renderDashboard();
+        populateCategoryDropdown();
+        renderDashboard();
       } catch (err) {
         console.error("Error loading initial data:", err);
         if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
@@ -655,10 +671,11 @@
           debts: []
         };
         
-        if (typeof populateCategoryDropdown === 'function') populateCategoryDropdown();
-        if (typeof renderDashboard === 'function') renderDashboard();
+        populateCategoryDropdown();
+        renderDashboard();
       }
     }
+
     function renderDashboard() {
       let totalMasukAll = 0, totalKeluarAll = 0;
       let totalMasukBulan = 0, totalKeluarBulan = 0;
@@ -684,7 +701,7 @@
       renderTopBudgetWidget(currentMonthStr);
     }
 
-    /* TOP 3 BUDGET KRITIS (WARNA TEME VINTAGE PAPER) */
+    /* TOP 3 BUDGET KRITIS (THEME MATCHING COLOR) */
     function renderTopBudgetWidget(currentMonthStr) {
       const widgetContainer = document.getElementById('dash-top-cat');
       const listContainer = document.getElementById('dash-budget-list-container');
@@ -725,15 +742,11 @@
         return;
       }
 
-      // Sortir berdasarkan persentase pemakaian tertinggi
       budgetList.sort((a, b) => b.percent - a.percent);
-
-      // Ambil Top 3 Kritis
       const top3 = budgetList.slice(0, 3);
       listContainer.innerHTML = '';
 
       top3.forEach(item => {
-        // Warna emas & tinta vintage paper tanpa warna lalu-lintas (tanpa hijau/merah/kuning)
         const barColor = 'var(--gold)';
         const textColor = 'var(--ink)';
         const barWidth = Math.min(item.percent, 100);
@@ -983,7 +996,6 @@
       container.innerHTML = '';
       const currentMonthStr = new Date().toISOString().slice(0, 7);
 
-      // 1. Olah data kategori & budget
       const listData = appData.categories
         .filter(c => c.Jenis === 'Pengeluaran')
         .map(cat => {
@@ -1007,10 +1019,9 @@
           };
         });
 
-      // 2. URUTKAN DARI TARGET BUDGET TERBESAR KE TERKECIL
+      // URUTKAN DARI TARGET BUDGET TERBESAR KE TERKECIL
       listData.sort((a, b) => b.targetVal - a.targetVal);
 
-      // 3. Render ke layar
       listData.forEach(item => {
         const card = document.createElement('div');
         card.className = 'border border-[var(--paper-line)] rounded-lg p-3 space-y-2 bg-[var(--paper)]';
@@ -1124,25 +1135,27 @@
               fill: true,
               tension: 0.3,
               pointBackgroundColor: themeColor,
-              pointRadius: 4,
-              pointHoverRadius: 7
+              pointRadius: 5,
+              pointHoverRadius: 8
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            // --- LOGIKA KLIK TITIK GRAFIK PADA FITUR BARU ---
-            onClick: (event, elements) => {
-              if (elements.length > 0) {
-                const index = elements[0].index;
+            /* HANDLER KLIK ELEGAN & Fleksibel */
+            onClick: (event, activeElements, chart) => {
+              const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, true);
+              if (points && points.length > 0) {
+                const index = points[0].index;
                 const clickedDay = index + 1;
                 const dayStr = clickedDay < 10 ? '0' + clickedDay : '' + clickedDay;
                 const fullTargetDate = `${selectedMonthStr}-${dayStr}`;
 
-                // Filter transaksi khusus pada tanggal yang diklik
-                const dayTransactions = appData.transactions.filter(t => 
-                  t.Jenis === 'Pengeluaran' && (t.Tanggal || '').slice(0, 10) === fullTargetDate
-                );
+                const dayTransactions = appData.transactions.filter(t => {
+                  if (t.Jenis !== 'Pengeluaran') return false;
+                  const ymd = parseDateToYMD(t.Tanggal);
+                  return ymd === fullTargetDate;
+                });
 
                 if (dayTransactions.length === 0) {
                   Swal.fire({
@@ -1154,7 +1167,6 @@
                   return;
                 }
 
-                // Susun daftar item pengeluaran
                 let totalHari = 0;
                 let htmlList = `<div class="text-left text-xs space-y-2 mt-2">`;
                 dayTransactions.forEach(t => {
@@ -1164,23 +1176,22 @@
                   const icon = catObj ? catObj.Ikon : '📌';
 
                   htmlList += `
-                    <div class="flex justify-between items-center p-2 border-b border-dashed border-[var(--paper-line)]">
+                    <div class="flex justify-between items-center p-2.5 border-b border-dashed border-[var(--paper-line)] bg-[var(--paper)] rounded">
                       <div>
                         <div class="font-bold text-[var(--ink)]">${icon} ${t.Kategori}</div>
-                        <div class="text-[10px] text-[var(--ink-soft)] font-mono">${t.Catatan || '-'}</div>
+                        <div class="text-[11px] text-[var(--ink-soft)] text-mono mt-0.5">${t.Catatan || 'Tanpa Catatan'}</div>
                       </div>
-                      <div class="font-bold font-mono text-[var(--stamp-red)]">${formatRupiah(nom)}</div>
+                      <div class="font-bold text-mono text-[var(--stamp-red)]">${formatRupiah(nom)}</div>
                     </div>`;
                 });
 
                 htmlList += `
-                  <div class="flex justify-between items-center font-bold pt-2 text-sm text-[var(--ink)]">
-                    <span>TOTAL:</span>
-                    <span class="text-[var(--stamp-red)]">${formatRupiah(totalHari)}</span>
+                  <div class="flex justify-between items-center font-bold pt-3 text-sm text-[var(--ink)] border-t border-[var(--paper-line)] mt-2">
+                    <span>TOTAL PENGELUARAN:</span>
+                    <span class="text-[var(--stamp-red)] text-mono">${formatRupiah(totalHari)}</span>
                   </div>
                 </div>`;
 
-                // Tampilkan Pop-up Vintage
                 Swal.fire({
                   ...getSwalConfig(),
                   title: `📌 Rincian Tgl ${clickedDay}`,
@@ -1216,19 +1227,19 @@
         });
       }
 
-      // Render Daftar Utang / Piutang Khusus Tab Extra
+      // Render Debt Records
       const debtContainer = document.getElementById('debt-list');
       if (debtContainer) {
         debtContainer.innerHTML = '';
         if (!appData.debts || appData.debts.length === 0) {
-          debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--ink-soft)] py-4">Belum ada catatan utang.</div>`;
+          debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--ink-soft)] py-4 font-medium">Belum ada catatan utang.</div>`;
           return;
         }
 
         appData.debts.forEach(d => {
           const isLunas = d.Status === 'Lunas';
           const card = document.createElement('div');
-          card.className = 'vintage-card p-4 space-y-2';
+          card.className = 'border border-[var(--paper-line)] rounded-lg p-4 space-y-2 bg-[var(--paper)]';
           card.innerHTML = `
             <div class="flex justify-between items-start">
               <div>
@@ -1237,7 +1248,7 @@
               </div>
               <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] font-mono py-1">
+            <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] text-mono py-1">
               <div>Total: ${formatRupiah(d.Total_Utang || d.Nominal)}</div>
               <div>Sisa: <b class="text-[var(--stamp-red)]">${formatRupiah(d.Sisa_Utang !== undefined ? d.Sisa_Utang : d.Nominal)}</b></div>
             </div>
@@ -1249,40 +1260,6 @@
           debtContainer.appendChild(card);
         });
       }
-    }
-
-      // Render Debt Records
-      const debtContainer = document.getElementById('debt-list');
-      if (!debtContainer) return;
-      debtContainer.innerHTML = '';
-      if (!appData.debts || appData.debts.length === 0) {
-        debtContainer.innerHTML = `<div class="text-center text-sm font-medium text-[var(--ink-soft)] py-4">Belum ada catatan utang.</div>`;
-        return;
-      }
-
-      appData.debts.forEach(d => {
-        const isLunas = d.Status === 'Lunas';
-        const card = document.createElement('div');
-        card.className = 'border border-[var(--paper-line)] rounded-lg p-4 space-y-2 bg-[var(--paper)]';
-        card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${d.Jenis}</div>
-              <div class="font-bold text-sm text-[var(--ink)]">${d.Nama_Pemberi_Pinjaman || d.Nama}</div>
-            </div>
-            <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] text-mono py-1">
-            <div>Total: ${formatRupiah(d.Total_Utang || d.Nominal)}</div>
-            <div>Sisa: <b class="text-[var(--stamp-red)]">${formatRupiah(d.Sisa_Utang !== undefined ? d.Sisa_Utang : d.Nominal)}</b></div>
-          </div>
-          <div class="flex justify-between items-center pt-2 border-t border-[var(--paper-line)]">
-            <span class="text-[11px] text-[var(--ink-soft)]">Tempo: ${d.Tanggal_Jatuh_Tempo || d.Tempo || '-'}</span>
-            ${!isLunas ? `<button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman || d.Nama}', ${d.Sisa_Utang || d.Nominal})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar</button>` : ''}
-          </div>
-        `;
-        debtContainer.appendChild(card);
-      });
     }
 
     function openAddDebtModal() { document.getElementById('add-debt-modal').classList.remove('hidden'); }
