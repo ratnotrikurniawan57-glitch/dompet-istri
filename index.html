@@ -742,6 +742,9 @@
       const now = new Date();
       const currentMonthStr = now.toISOString().slice(0, 7);
 
+      // Objek penyimpan total per kategori
+      const expenseByCategory = {};
+
       appData.transactions.forEach(t => {
         const nominal = parseFloat(t.Nominal) || 0;
         const tglStr = (t.Tanggal || '').slice(0, 7);
@@ -750,7 +753,11 @@
           if (tglStr === currentMonthStr) totalMasukBulan += nominal;
         } else if (t.Jenis === 'Pengeluaran') {
           totalKeluarAll += nominal;
-          if (tglStr === currentMonthStr) totalKeluarBulan += nominal;
+          if (tglStr === currentMonthStr) {
+            totalKeluarBulan += nominal;
+            // Kumpulkan nominal pengeluaran berdasarkan kategori bulan ini
+            expenseByCategory[t.Kategori] = (expenseByCategory[t.Kategori] || 0) + nominal;
+          }
         }
       });
 
@@ -765,77 +772,50 @@
       document.getElementById('dash-pemasukan-bulan-ini').innerText = formatRupiah(totalMasukBulan);
       document.getElementById('dash-pengeluaran-bulan-ini').innerText = formatRupiah(totalKeluarBulan);
       
-      renderTopBudgetWidget(currentMonthStr);
-    }
-
-    function renderTopBudgetWidget(currentMonthStr) {
-      const widgetContainer = document.getElementById('dash-top-cat');
-      const listContainer = document.getElementById('dash-budget-list-container');
+      // ============================================================
+      // LOGIKA BARU: TOP 3 PENGELUARAN TERBESAR
+      // Menggantikan renderTopBudgetWidget(currentMonthStr);
+      // ============================================================
       
-      if (!appData.budgets || appData.budgets.length === 0 || !listContainer) {
-        if (widgetContainer) widgetContainer.classList.add('hidden');
-        return;
+      // Urutkan dari nominal terbesar ke terkecil, lalu potong ambil 3 teratas
+      const topExpenses = Object.keys(expenseByCategory)
+        .map(cat => ({ category: cat, total: expenseByCategory[cat] }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 3);
+
+      const criticalContainer = document.getElementById('critical-budget-list');
+      if (criticalContainer) {
+        // Ganti judul list
+        const criticalTitle = document.getElementById('critical-budget-title');
+        if (criticalTitle) criticalTitle.innerHTML = '🔥 TOP 3 PENGELUARAN TERBESAR';
+
+        if (topExpenses.length === 0) {
+          criticalContainer.innerHTML = `<div class="text-xs text-[var(--ink-soft)] text-center italic py-2 font-mono">Belum ada pengeluaran bulan ini.</div>`;
+        } else {
+          criticalContainer.innerHTML = topExpenses.map(item => {
+            // Cari ikon sesuai kategori
+            const catObj = appData.categories.find(c => c.Nama_Kategori === item.category);
+            const icon = catObj ? catObj.Ikon : '📌';
+            
+            return `
+              <div class="flex items-center justify-between p-3 border-b border-dashed border-[var(--paper-line)] last:border-0">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[var(--gold)]/20 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/30">
+                    ${icon}
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-bold text-[var(--ink)] uppercase tracking-wider">${item.category}</div>
+                    <div class="text-[10px] text-[var(--ink-soft)] uppercase mt-0.5">Total Bulan Ini</div>
+                  </div>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                  <div class="font-bold text-[var(--ink)]">${formatRupiah(item.total)}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
       }
-
-      const budgetList = [];
-      appData.budgets.forEach(budget => {
-        const target = parseFloat(budget.Target_Anggaran) || 0;
-        if (target <= 0) return;
-
-        const categoryObj = appData.categories.find(c => c.ID_Kategori === budget.ID_Kategori || c.Nama_Kategori === budget.ID_Kategori);
-        const catName = categoryObj ? categoryObj.Nama_Kategori : budget.ID_Kategori;
-        const catIcon = categoryObj ? categoryObj.Ikon : '📌';
-
-        let totalPemakaian = 0;
-        appData.transactions.forEach(t => {
-          if (t.Jenis === 'Pengeluaran' && t.Kategori === catName && (t.Tanggal || '').slice(0, 7) === currentMonthStr) {
-            totalPemakaian += parseFloat(t.Nominal) || 0;
-          }
-        });
-
-        const percent = Math.round((totalPemakaian / target) * 100);
-        budgetList.push({
-          name: catName,
-          icon: catIcon,
-          target: target,
-          used: totalPemakaian,
-          percent: percent
-        });
-      });
-
-      if (budgetList.length === 0) {
-        widgetContainer.classList.add('hidden');
-        return;
-      }
-
-      budgetList.sort((a, b) => b.percent - a.percent);
-
-      const top3 = budgetList.slice(0, 3);
-      listContainer.innerHTML = '';
-
-      top3.forEach(item => {
-        const barWidth = Math.min(item.percent, 100);
-        const row = document.createElement('div');
-        row.className = 'space-y-1';
-        row.innerHTML = `
-          <div class="flex justify-between items-center text-xs font-bold">
-            <span>${item.icon} ${item.name}</span>
-            <span class="text-[var(--gold)]">${item.percent}%</span>
-          </div>
-          <div class="top-budget-bar-bg">
-            <div class="top-budget-bar-fill" style="width: ${barWidth}%;">
-              <span class="top-budget-bar-percent">${item.percent}%</span>
-            </div>
-          </div>
-          <div class="flex justify-between items-center text-[10px] text-[var(--ink-soft)] text-mono">
-            <span>Terpakai: ${formatRupiah(item.used)}</span>
-            <span>Target: ${formatRupiah(item.target)}</span>
-          </div>
-        `;
-        listContainer.appendChild(row);
-      });
-
-      widgetContainer.classList.remove('hidden');
     }
 
     function setJenis(jenis) {
