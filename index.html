@@ -777,46 +777,56 @@
       document.getElementById('dash-pengeluaran-bulan-ini').innerText = formatRupiah(totalKeluarBulan);
       
       // ============================================================
-      // LOGIKA BARU: TOP 3 PENGELUARAN TERBESAR
+      // LOGIKA BARU: TOP 3 PENGELUARAN TERBESAR (DENGAN TAMPILAN BAR & BUDGET)
       // ============================================================
       
-      // Urutkan dari nominal terbesar ke terkecil, lalu potong ambil 3 teratas
-      const topExpenses = Object.keys(expenseByCategory)
-        .map(cat => ({ category: cat, total: expenseByCategory[cat] }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 3);
+      // 1. Kumpulkan data pengeluaran dan gabungkan dengan target budget
+      const listData = Object.keys(expenseByCategory).map(catName => {
+        const catObj = appData.categories.find(c => c.Nama_Kategori === catName);
+        const budgetObj = appData.budgets.find(b => b.ID_Kategori === catName || (catObj && b.ID_Kategori === catObj.ID_Kategori));
+        
+        const usedVal = expenseByCategory[catName];
+        const targetVal = budgetObj ? parseFloat(budgetObj.Target_Anggaran) : 0;
+        const percent = targetVal > 0 ? Math.min(Math.round((usedVal / targetVal) * 100), 100) : 0;
+
+        return {
+          cat: catObj || { Nama_Kategori: catName, Ikon: '📌' },
+          targetVal: targetVal,
+          usedVal: usedVal,
+          percent: percent
+        };
+      });
+
+      // 2. Urutkan berdasarkan pengeluaran riil terbesar, lalu ambil Top 3
+      const topExpenses = listData.sort((a, b) => b.usedVal - a.usedVal).slice(0, 3);
 
       const criticalContainer = document.getElementById('critical-budget-list');
       if (criticalContainer) {
-        // Ganti judul list
         const criticalTitle = document.getElementById('critical-budget-title');
         if (criticalTitle) criticalTitle.innerHTML = '🔥 TOP 3 PENGELUARAN TERBESAR';
 
         if (topExpenses.length === 0) {
-          criticalContainer.innerHTML = `<div class="text-xs text-[var(--ink-soft)] text-center italic py-2 font-mono">Belum ada pengeluaran bulan ini.</div>`;
+          criticalContainer.innerHTML = `<div class="text-xs text-[var(--ink-soft)] text-center italic py-4 font-mono">Belum ada pengeluaran bulan ini.</div>`;
         } else {
-          criticalContainer.innerHTML = topExpenses.map(item => {
-            // Cari ikon sesuai kategori
-            const catObj = appData.categories.find(c => c.Nama_Kategori === item.category);
-            const icon = catObj ? catObj.Ikon : '📌';
-            
-            return `
-              <div class="flex items-center justify-between p-3 border-b border-dashed border-[var(--paper-line)] last:border-0">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-[var(--gold)]/20 flex items-center justify-center text-[var(--gold)] border border-[var(--gold)]/30">
-                    ${icon}
-                  </div>
-                  <div class="text-left">
-                    <div class="text-xs font-bold text-[var(--ink)] uppercase tracking-wider">${item.category}</div>
-                    <div class="text-[10px] text-[var(--ink-soft)] uppercase mt-0.5">Total Bulan Ini</div>
-                  </div>
-                </div>
-                <div class="text-right flex flex-col items-end">
-                  <div class="font-bold text-[var(--ink)]">${formatRupiah(item.total)}</div>
+          criticalContainer.innerHTML = topExpenses.map(item => `
+            <div class="p-3 border-b border-dashed border-[var(--paper-line)] last:border-0 space-y-2">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold">${item.cat.Ikon} ${item.cat.Nama_Kategori}</span>
+                <span class="text-[var(--ink-soft)] text-mono">Target: ${formatRupiah(item.targetVal)}</span>
+              </div>
+              <div class="top-budget-bar-bg">
+                <div class="top-budget-bar-fill" style="width: ${item.percent}%;">
+                  <span class="top-budget-bar-percent">${item.percent}%</span>
                 </div>
               </div>
-            `;
-          }).join('');
+              <div class="flex justify-between items-center text-[10px] text-[var(--ink-soft)] text-mono">
+                <span>Terpakai Bulan Ini: <strong class="text-[var(--ink)]">${formatRupiah(item.usedVal)}</strong></span>
+                <button onclick="nav('plan')" class="vintage-btn vintage-btn-outline text-[10px] px-2 py-0.5">
+                  [ CEK ]
+                </button>
+              </div>
+            </div>
+          `).join('');
         }
       }
     }
