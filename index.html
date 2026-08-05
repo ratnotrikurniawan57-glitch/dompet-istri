@@ -679,49 +679,29 @@
     }
 
     async function loadInitialData() {
-      try {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({
-            title: 'Membuka Buku Kas...',
-            text: 'Mengambil data dari server',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-          });
-        }
-        const data = await callApi('getInitialData');
-        appData = data || { transactions: [], categories: [], budgets: [], debts: [] };
-        if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
-        populateCategoryDropdown();
-        renderDashboard();
-      } catch (err) {
-        console.error("Error loading initial data:", err);
-        if (typeof Swal !== 'undefined' && Swal.isVisible()) Swal.close();
-        
-        appData = {
-          transactions: [],
-          categories: [
-            { Nama_Kategori: 'Makanan & Minuman', Ikon: '🍔', Jenis: 'Pengeluaran' },
-            { Nama_Kategori: 'Transportasi', Ikon: '🚗', Jenis: 'Pengeluaran' },
-            { Nama_Kategori: 'Gaji & Pendapatan', Ikon: '💰', Jenis: 'Pemasukan' }
-          ],
-          budgets: [],
-          debts: []
-        };
-        
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({ 
-            ...getSwalConfig(), 
-            icon: 'warning', 
-            title: 'Koneksi Terputus', 
-            text: 'Gagal menghubungi Google Sheet (' + err.message + '). Membuka dengan Mode Simulasi.' 
-          });
-        }
-        
-        populateCategoryDropdown();
-        renderDashboard();
-      }
-    }
+  try {
+    console.log("Mengambil data dari server...");
+    const data = await callApi('getData');
+    console.log("Respon dari server:", data);
 
+    if (data) {
+      // Pastikan struktur appData aman dari nilai undefined
+      appData = {
+        transactions: data.transactions || [],
+        categories: data.categories || [],
+        budgets: data.budgets || [],
+        debts: data.debts || []
+      };
+
+      console.log("Data transaksi berhasil dimuat:", appData.transactions);
+
+      // Panggil fungsi untuk memperbarui tampilan UI di layar
+      renderDashboard(); 
+    }
+  } catch (err) {
+    console.error("Gagal mengambil data awal:", err);
+  }
+}
     function renderDashboard() {
       let totalMasukAll = 0, totalKeluarAll = 0;
       let totalMasukBulan = 0, totalKeluarBulan = 0;
