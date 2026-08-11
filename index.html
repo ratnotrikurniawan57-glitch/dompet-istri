@@ -503,36 +503,48 @@
   </div>
 
   <!-- Modal Tambah Utang / Piutang -->
-  <div id="add-debt-modal" class="modal-overlay hidden">
-    <div class="vintage-card p-6 w-full max-w-md space-y-4">
-      <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
-        <div class="title-serif font-bold text-lg">Catat Utang/Piutang</div>
-        <button onclick="closeAddDebtModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
-      </div>
+<div id="add-debt-modal" class="modal-overlay hidden">
+  <div class="vintage-card p-6 w-full max-w-md space-y-4">
+    <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
+      <div class="title-serif font-bold text-lg">Catat Utang/Piutang</div>
+      <button onclick="closeAddDebtModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div>
+      <label class="eyebrow block mb-1">Nama Pihak</label>
+      <input type="text" id="debt-nama" class="vintage-input" placeholder="Contoh: Budi">
+    </div>
+
+    <div>
+      <label class="eyebrow block mb-1">Jenis</label>
+      <select id="debt-jenis" class="vintage-select">
+        <option value="Utang">Utang (Saya Pinjam Uang)</option>
+        <option value="Piutang">Piutang (Orang Pinjam Uang)</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="eyebrow block mb-1">Total Nominal (Rp)</label>
+      <input type="text" id="debt-nominal" oninput="formatRupiahInput(this)" class="vintage-input font-bold text-[var(--gold)]" placeholder="0">
+    </div>
+
+    <!-- 🟢 DIBUAT 2 KOLOM: TANGGAL PINJAM & JATUH TEMPO -->
+    <div class="grid grid-cols-2 gap-3">
       <div>
-        <label class="eyebrow block mb-1">Nama Pihak</label>
-        <input type="text" id="debt-nama" class="vintage-input" placeholder="Contoh: Budi">
-      </div>
-      <div>
-        <label class="eyebrow block mb-1">Jenis</label>
-        <select id="debt-jenis" class="vintage-select">
-          <option value="Utang">Utang (Saya Pinjam Uang)</option>
-          <option value="Piutang">Piutang (Orang Pinjam Uang)</option>
-        </select>
-      </div>
-      <div>
-        <label class="eyebrow block mb-1">Total Nominal (Rp)</label>
-        <input type="text" id="debt-nominal" oninput="formatRupiahInput(this)" class="vintage-input font-bold text-[var(--gold)]" placeholder="0">
+        <label class="eyebrow block mb-1">Tanggal Pinjam</label>
+        <input type="date" id="debt-tanggal" class="vintage-input">
       </div>
       <div>
         <label class="eyebrow block mb-1">Jatuh Tempo</label>
         <input type="date" id="debt-tempo" class="vintage-input">
       </div>
-      <button onclick="saveDebt()" class="vintage-btn vintage-btn-primary w-full py-3 mt-2">
-        Simpan Catatan
-      </button>
     </div>
+
+    <button onclick="saveDebt()" class="vintage-btn vintage-btn-primary w-full py-3 mt-2">
+      Simpan Catatan
+    </button>
   </div>
+</div>
 
   <!-- Modal Cicil / Pelunasan Utang -->
   <div id="pay-debt-modal" class="modal-overlay hidden">
@@ -1383,48 +1395,63 @@
       }
     }
 
-    function openAddDebtModal() { document.getElementById('add-debt-modal').classList.remove('hidden'); }
-    function closeAddDebtModal() { document.getElementById('add-debt-modal').classList.add('hidden'); }
+    function openAddDebtModal() { 
+  // 🟢 SET OTOMATIS TANGGAL PINJAM DENGAN HARI INI
+  const inputTanggal = document.getElementById('debt-tanggal');
+  if (inputTanggal) {
+    inputTanggal.value = new Date().toISOString().slice(0, 10);
+  }
 
-    async function saveDebt() {
-      const nama = document.getElementById('debt-nama').value;
-      const jenis = document.getElementById('debt-jenis').value;
-      const nominal = getUnformattedNominal(document.getElementById('debt-nominal').value);
-      const tempo = document.getElementById('debt-tempo').value;
+  // Kosongkan field input lain
+  document.getElementById('debt-nama').value = '';
+  document.getElementById('debt-nominal').value = '';
+  document.getElementById('debt-tempo').value = '';
 
-      if (!nama || nominal <= 0) {
-        Swal.fire({ ...getSwalConfig(), title: 'Data Kurang', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
-        return;
-      }
+  document.getElementById('add-debt-modal').classList.remove('hidden'); 
+}
 
-      const newDebt = {
-        ID_Utang: 'UTG-' + new Date().getTime(),
-        Nama_Pemberi_Pinjaman: nama,
-        Jenis: jenis,
-        Total_Utang: nominal,
-        Sudah_Dibayar: 0,
-        Sisa_Utang: nominal,
-        Status: 'Belum Lunas',
-        Tanggal_Jatuh_Tempo: tempo
-      };
+function closeAddDebtModal() { 
+  document.getElementById('add-debt-modal').classList.add('hidden'); 
+}
 
-      try {
-        Swal.fire({ title: 'Menyimpan Catatan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        await callApi('addDebt', { nama: nama, jenis: jenis, totalUtang: nominal, jatuhTempo: tempo });
-      } catch (err) {
-        console.warn("Save debt ke server gagal, simpan lokal:", err.message);
-      }
+async function saveDebt() {
+  const nama = document.getElementById('debt-nama').value;
+  const jenis = document.getElementById('debt-jenis').value;
+  const nominal = getUnformattedNominal(document.getElementById('debt-nominal').value);
+  const tempo = document.getElementById('debt-tempo').value;
+  
+  // 🟢 AMBIL NILAI TANGGAL PINJAM
+  const tanggalInput = document.getElementById('debt-tanggal') ? document.getElementById('debt-tanggal').value : '';
+  const tanggal = tanggalInput || new Date().toISOString().slice(0, 10);
 
-      appData.debts.unshift(newDebt);
-      saveLocalData();
+  if (!nama || nominal <= 0) {
+    Swal.fire({ ...getSwalConfig(), title: 'Input Inkomplit', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
+    return;
+  }
 
-      closeAddDebtModal();
-      document.getElementById('debt-nama').value = '';
-      document.getElementById('debt-nominal').value = '';
-      
-      renderExtra();
-      Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan utang tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
-    }
+  try {
+    Swal.fire({ title: 'Menyimpan Utang...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    
+    // 🟢 TAMBAHKAN 'tanggal' KE DALAM PARAMETER KIKIRIM VIA CALLAPI
+    await callApi('addDebt', { 
+      nama: nama, 
+      jenis: jenis, 
+      totalUtang: nominal, 
+      jatuhTempo: tempo,
+      tanggal: tanggal // <--- Dikirim ke backend
+    });
+
+    closeAddDebtModal();
+    document.getElementById('debt-nama').value = '';
+    document.getElementById('debt-nominal').value = '';
+    if (document.getElementById('debt-tempo')) document.getElementById('debt-tempo').value = '';
+    
+    await loadInitialData();
+    Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan utang tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
+  } catch (err) {
+    Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
+  }
+}
 
     function openPayDebtModal(id, nama, sisa) {
       document.getElementById('pay-debt-id').value = id;
