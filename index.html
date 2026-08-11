@@ -1008,42 +1008,51 @@
     }
 
     function renderHistory() {
-      const container = document.getElementById('history-list');
-      container.innerHTML = '';
-      const monthVal = document.getElementById('filter-month').value || new Date().toISOString().slice(0, 7);
-      document.getElementById('filter-month').value = monthVal;
-      const typeVal = document.getElementById('filter-type').value;
+  const container = document.getElementById('history-list');
+  container.innerHTML = '';
+  const monthVal = document.getElementById('filter-month').value || new Date().toISOString().slice(0, 7);
+  document.getElementById('filter-month').value = monthVal;
+  const typeVal = document.getElementById('filter-type').value;
 
-      const filtered = appData.transactions.filter(t => {
-        const matchMonth = (t.Tanggal || '').slice(0, 7) === monthVal;
-        const matchType = typeVal === 'All' || t.Jenis === typeVal;
-        return matchMonth && matchType;
-      });
+  // 1. Filter data berdasarkan bulan dan jenis transaksi
+  const filtered = appData.transactions.filter(t => {
+    const matchMonth = (t.Tanggal || '').slice(0, 7) === monthVal;
+    const matchType = typeVal === 'All' || t.Jenis === typeVal;
+    return matchMonth && matchType;
+  });
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center text-sm text-[var(--ink-soft)] py-8 font-medium">Belum ada catatan di bulan ini.</div>`;
-        return;
-      }
+  // 2. TAMBAHAN: Urutkan data dari transaksi terbaru ke transaksi tertua
+  filtered.sort((a, b) => {
+    // Ambil tanggal/waktu pembuatan jika ada, atau gunakan string Tanggal
+    const dateA = new Date(a.Created_At || a.Tanggal);
+    const dateB = new Date(b.Created_At || b.Tanggal);
+    return dateB - dateA; // Urutan descending (terbaru di atas)
+  });
 
-      filtered.forEach(t => {
-        const isIncome = t.Jenis === 'Pemasukan';
-        const textColorClass = isIncome ? 'text-[var(--stamp-green)]' : 'text-[var(--stamp-red)]';
-        
-        const item = document.createElement('div');
-        item.className = 'flex justify-between items-center py-3 border-b border-dashed border-[var(--paper-line)]';
-        item.innerHTML = `
-          <div>
-            <div class="font-bold text-sm text-[var(--ink)]">${t.Kategori}</div>
-            <div class="text-[11px] text-[var(--ink-soft)] text-mono mt-0.5">${t.Tanggal} • ${t.Catatan || '-'}</div>
-          </div>
-          <div class="flex items-center gap-4">
-            <span class="font-bold text-mono ${textColorClass}">${isIncome ? '+' : '-'}${formatRupiah(t.Nominal)}</span>
-            <button onclick="deleteTx('${t.ID_Transaksi}')" class="text-[var(--ink-soft)] hover:text-[var(--stamp-red)] text-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
-          </div>
-        `;
-        container.appendChild(item);
-      });
-    }
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-center text-sm text-[var(--ink-soft)] py-8 font-medium">Belum ada catatan di bulan ini.</div>`;
+    return;
+  }
+
+  filtered.forEach(t => {
+    const isIncome = t.Jenis === 'Pemasukan';
+    const textColorClass = isIncome ? 'text-[var(--stamp-green)]' : 'text-[var(--stamp-red)]';
+    
+    const item = document.createElement('div');
+    item.className = 'flex justify-between items-center py-3 border-b border-dashed border-[var(--paper-line)]';
+    item.innerHTML = `
+      <div>
+        <div class="font-bold text-sm text-[var(--ink)]">${t.Kategori}</div>
+        <div class="text-[11px] text-[var(--ink-soft)] text-mono mt-0.5">${t.Tanggal} • ${t.Catatan || '-'}</div>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="font-bold text-mono ${textColorClass}">${isIncome ? '+' : '-'}${formatRupiah(t.Nominal)}</span>
+        <button onclick="deleteTx('${t.ID_Transaksi}')" class="text-[var(--ink-soft)] hover:text-[var(--stamp-red)] text-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
 
     function deleteTx(id) {
       Swal.fire({
