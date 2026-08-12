@@ -982,49 +982,69 @@
     }
 
     async function simpanTransaksi() {
-      const nominal = getUnformattedNominal(document.getElementById('input-nominal').value);
-      const kategori = document.getElementById('input-kategori').value;
-      const tanggal = document.getElementById('input-tanggal').value || new Date().toISOString().slice(0, 10);
-      const catatan = document.getElementById('input-catatan').value;
+  const nominal = getUnformattedNominal(document.getElementById('input-nominal').value);
+  const kategori = document.getElementById('input-kategori').value;
+  const tanggal = document.getElementById('input-tanggal').value || new Date().toISOString().slice(0, 10);
+  const catatan = document.getElementById('input-catatan').value;
 
-      if (!nominal || nominal <= 0) {
-        Swal.fire({ ...getSwalConfig(), title: 'Error', text: 'Nominal transaksi harus lebih dari 0', icon: 'error' });
-        return;
-      }
+  if (!nominal || nominal <= 0) {
+    Swal.fire({ ...getSwalConfig(), title: 'Error', text: 'Nominal transaksi harus lebih dari 0', icon: 'error' });
+    return;
+  }
 
-      const newTrx = {
-        ID_Transaksi: 'TRX_' + new Date().getTime(),
-        Tanggal: tanggal,
-        Jenis: currentJenisInput,
-        Kategori: kategori,
-        Nominal: nominal,
-        Catatan: catatan
-      };
+  const newTrx = {
+    ID_Transaksi: 'TRX_' + new Date().getTime(),
+    Tanggal: tanggal,
+    Jenis: currentJenisInput,
+    Kategori: kategori,
+    Nominal: nominal,
+    Catatan: catatan
+  };
 
-      try {
-        Swal.fire({ title: 'Mencatat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        await callApi('saveTransaction', { tanggal: tanggal, jenis: currentJenisInput, kategori: kategori, nominal: nominal, catatan: catatan });
-      } catch (err) {
-        console.warn("Simpan ke server gagal, menyimpan ke lokal:", err.message);
-      }
+  try {
+    Swal.fire({ title: 'Mencatat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    await callApi('saveTransaction', { tanggal: tanggal, jenis: currentJenisInput, kategori: kategori, nominal: nominal, catatan: catatan });
+  } catch (err) {
+    console.warn("Simpan ke server gagal, menyimpan ke lokal:", err.message);
+  }
 
-      appData.transactions.unshift(newTrx);
-      saveLocalData();
+  appData.transactions.unshift(newTrx);
+  saveLocalData();
 
-      document.getElementById('input-nominal').value = '';
-      document.getElementById('input-catatan').value = '';
-      document.getElementById('smart-text-input').value = '';
+  // Reset Form
+  document.getElementById('input-nominal').value = '';
+  document.getElementById('input-catatan').value = '';
+  if (document.getElementById('smart-text-input')) {
+    document.getElementById('smart-text-input').value = '';
+  }
 
-      nav('dashboard');
-      Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
-    }
+  // Set filter bulan di UI Riwayat ke bulan transaksi yang BARU BISA DISIMPAN
+  const filterMonthEl = document.getElementById('filter-month');
+  if (filterMonthEl) {
+    filterMonthEl.value = tanggal.slice(0, 7);
+  }
+
+  // Render ulang UI Riwayat & Dashboard di memori
+  if (typeof renderHistory === 'function') renderHistory();
+  
+  nav('dashboard');
+  Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
+}
 
     function renderHistory() {
   const container = document.getElementById('history-list');
+  if (!container) return;
+  
   container.innerHTML = '';
-  const monthVal = document.getElementById('filter-month').value || new Date().toISOString().slice(0, 7);
-  document.getElementById('filter-month').value = monthVal;
-  const typeVal = document.getElementById('filter-type').value;
+  
+  const filterMonthEl = document.getElementById('filter-month');
+  // Pastikan input HTML filter-month terisi nilai bulan jika masih kosong
+  if (filterMonthEl && !filterMonthEl.value) {
+    filterMonthEl.value = new Date().toISOString().slice(0, 7);
+  }
+  
+  const monthVal = filterMonthEl ? filterMonthEl.value : new Date().toISOString().slice(0, 7);
+  const typeVal = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'All';
 
   // 1. Filter data berdasarkan bulan dan jenis transaksi
   const filtered = appData.transactions.filter(t => {
@@ -1033,12 +1053,11 @@
     return matchMonth && matchType;
   });
 
-  // 2. TAMBAHAN: Urutkan data dari transaksi terbaru ke transaksi tertua
+  // 2. Urutkan data dari transaksi terbaru ke transaksi tertua
   filtered.sort((a, b) => {
-    // Ambil tanggal/waktu pembuatan jika ada, atau gunakan string Tanggal
     const dateA = new Date(a.Created_At || a.Tanggal);
     const dateB = new Date(b.Created_At || b.Tanggal);
-    return dateB - dateA; // Urutan descending (terbaru di atas)
+    return dateB - dateA;
   });
 
   if (filtered.length === 0) {
@@ -1065,7 +1084,6 @@
     container.appendChild(item);
   });
 }
-
     function deleteTx(id) {
       Swal.fire({
         ...getSwalConfig(), title: 'Hapus Catatan?', text: 'Coretan ini akan dihapus permanen.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Hapus'
