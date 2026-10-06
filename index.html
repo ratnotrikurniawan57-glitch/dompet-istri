@@ -502,7 +502,7 @@
     </div>
   </div>
 
-  <!-- Modal Tambah Utang / Piutang -->
+<!-- Modal Tambah Utang / Piutang -->
 <div id="add-debt-modal" class="modal-overlay hidden">
   <div class="vintage-card p-6 w-full max-w-md space-y-4">
     <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
@@ -528,7 +528,6 @@
       <input type="text" id="debt-nominal" oninput="formatRupiahInput(this)" class="vintage-input font-bold text-[var(--gold)]" placeholder="0">
     </div>
 
-    <!-- 🟢 DIBUAT 2 KOLOM: TANGGAL PINJAM & JATUH TEMPO -->
     <div class="grid grid-cols-2 gap-3">
       <div>
         <label class="eyebrow block mb-1">Tanggal Pinjam</label>
@@ -538,6 +537,12 @@
         <label class="eyebrow block mb-1">Jatuh Tempo</label>
         <input type="date" id="debt-tempo" class="vintage-input">
       </div>
+    </div>
+
+    <!-- 🟢 DITAMBAHKAN: Checkbox untuk sinkronisasi saldo utama -->
+    <div class="flex items-center gap-2 pt-1 pb-1">
+      <input type="checkbox" id="debt-catat-saldo" checked class="w-4 h-4 accent-[var(--gold)]">
+      <label for="debt-catat-saldo" class="text-xs text-[var(--ink-soft)] font-medium">Catat ke saldo utama (Masuk/Keluar)</label>
     </div>
 
     <button onclick="saveDebt()" class="vintage-btn vintage-btn-primary w-full py-3 mt-2">
@@ -1457,9 +1462,11 @@ async function saveDebt() {
   const nominal = getUnformattedNominal(document.getElementById('debt-nominal').value);
   const tempo = document.getElementById('debt-tempo').value;
   
-  // 🟢 AMBIL NILAI TANGGAL PINJAM
   const tanggalInput = document.getElementById('debt-tanggal') ? document.getElementById('debt-tanggal').value : '';
   const tanggal = tanggalInput || new Date().toISOString().slice(0, 10);
+  
+  // 🟢 DITAMBAHKAN: Mengambil nilai checkbox
+  const sync = document.getElementById('debt-catat-saldo') ? document.getElementById('debt-catat-saldo').checked : false;
 
   if (!nama || nominal <= 0) {
     Swal.fire({ ...getSwalConfig(), title: 'Input Inkomplit', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
@@ -1469,27 +1476,28 @@ async function saveDebt() {
   try {
     Swal.fire({ title: 'Menyimpan Utang...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     
-    // 🟢 TAMBAHKAN 'tanggal' KE DALAM PARAMETER KIKIRIM VIA CALLAPI
+    // 🟢 DIBENAHI: Mengirimkan syncToTransaction ke backend
     await callApi('addDebt', { 
       nama: nama, 
       jenis: jenis, 
       totalUtang: nominal, 
       jatuhTempo: tempo,
-      tanggal: tanggal // <--- Dikirim ke backend
+      tanggal: tanggal,
+      syncToTransaction: sync
     });
 
     closeAddDebtModal();
     document.getElementById('debt-nama').value = '';
     document.getElementById('debt-nominal').value = '';
     if (document.getElementById('debt-tempo')) document.getElementById('debt-tempo').value = '';
+    if (document.getElementById('debt-catat-saldo')) document.getElementById('debt-catat-saldo').checked = true;
     
-    await loadInitialData();
+    await loadInitialData(); // Akan me-refresh Dashboard & Saldo otomatis
     Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan utang tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
   } catch (err) {
     Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
   }
 }
-
     function openPayDebtModal(id, nama, sisa) {
       document.getElementById('pay-debt-id').value = id;
       document.getElementById('pay-debt-target-info').innerText = `Pembayaran untuk: ${nama} (Sisa: ${formatRupiah(sisa)})`;
