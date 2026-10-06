@@ -518,8 +518,8 @@
     <div>
       <label class="eyebrow block mb-1">Jenis</label>
       <select id="debt-jenis" class="vintage-select">
-        <option value="Utang">Utang (Saya Pinjam Uang)</option>
-        <option value="Piutang">Piutang (Orang Pinjam Uang)</option>
+        <option value="Utang">Terima Pinjaman (Uang Masuk ke Saya)</option>
+        <option value="Piutang">Beri Pinjaman (Uang Keluar ke Orang)</option>
       </select>
     </div>
 
@@ -1393,17 +1393,23 @@
       debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--ink-soft)] py-4 font-medium">Belum ada catatan utang.</div>`;
     } else {
       appData.debts.forEach(d => {
+        const isLunas = d.Status === 'Lunas';). Timpa blok card.innerHTML = ... menjadi seperti ini agar sistem menerjemahkan kata "Utang/Piutang" di layar:
+
+JavaScript
         const isLunas = d.Status === 'Lunas';
         const card = document.createElement('div');
         card.className = 'vintage-card p-4 space-y-2';
         
         const tglPinjam = d.Tanggal_Pinjam || d.Tanggal || '-';
         const tglTempo = d.Tanggal_Jatuh_Tempo || d.Tempo || '-';
+        
+        // VISUAL ALIASING: Menerjemahkan istilah DB ke bahasa Awam
+        const labelJenis = d.Jenis === 'Utang' ? 'Terima Pinjaman' : 'Beri Pinjaman';
 
         card.innerHTML = `
           <div class="flex justify-between items-start">
             <div>
-              <div class="eyebrow text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${d.Jenis}</div>
+              <div class="eyebrow text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${labelJenis}</div>
               <div class="font-bold text-sm text-[var(--ink)]">${d.Nama_Pemberi_Pinjaman || d.Nama}</div>
             </div>
             <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
@@ -1427,7 +1433,7 @@
 
           ${!isLunas ? `
             <div class="pt-1 flex justify-end">
-              <button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman || d.Nama}', ${d.Sisa_Utang || d.Nominal})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar</button>
+              <button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman \vert{}\vert{} d.Nama}',${d.Sisa_Utang || d.Nominal})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar / Cicil</button>
             </div>
           ` : ''}
         `;
