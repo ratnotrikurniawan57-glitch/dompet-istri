@@ -506,7 +506,7 @@
 <div id="add-debt-modal" class="modal-overlay hidden">
   <div class="vintage-card p-6 w-full max-w-md space-y-4">
     <div class="flex justify-between items-center border-b border-[var(--gold)] pb-2">
-      <div class="title-serif font-bold text-lg">Catat Utang/Piutang</div>
+      <div class="title-serif font-bold text-lg">Catat Pinjaman</div>
       <button onclick="closeAddDebtModal()" class="text-[var(--ink-soft)] px-2"><i class="fa-solid fa-xmark"></i></button>
     </div>
     
@@ -516,7 +516,7 @@
     </div>
 
     <div>
-      <label class="eyebrow block mb-1">Jenis</label>
+      <label class="eyebrow block mb-1">Jenis Pinjaman</label>
       <select id="debt-jenis" class="vintage-select">
         <option value="Utang">Terima Pinjaman (Uang Masuk ke Saya)</option>
         <option value="Piutang">Beri Pinjaman (Uang Keluar ke Orang)</option>
@@ -539,7 +539,6 @@
       </div>
     </div>
 
-    <!-- 🟢 DITAMBAHKAN: Checkbox untuk sinkronisasi saldo utama -->
     <div class="flex items-center gap-2 pt-1 pb-1">
       <input type="checkbox" id="debt-catat-saldo" checked class="w-4 h-4 accent-[var(--gold)]">
       <label for="debt-catat-saldo" class="text-xs text-[var(--ink-soft)] font-medium">Catat ke saldo utama (Masuk/Keluar)</label>
@@ -575,10 +574,8 @@
   </div>
 
   <script>
-    // URL Web App Google Apps Script
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbytB8tChC8FGx8ENDnu02NgB_4UG4PfnEx4Eq19zcdtcUlEgbPa1lgykzj1kFPZHNis_w/exec";
 
-    // Single Declarations of Global App State
     let appData = { transactions: [], categories: [], budgets: [], debts: [] };
     let currentJenisInput = 'Pengeluaran';
     let myChart = null;
@@ -598,7 +595,7 @@
         
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("Respon server bukan JSON (Mungkin URL Script/Izin Akses 'Anyone' belum di-setting).");
+          throw new Error("Respon server bukan JSON.");
         }
 
         const json = await response.json();
@@ -763,7 +760,6 @@
       const now = new Date();
       const currentMonthStr = now.toISOString().slice(0, 7);
 
-      // Objek penyimpan total per kategori
       const expenseByCategory = {};
 
       appData.transactions.forEach(t => {
@@ -776,7 +772,6 @@
           totalKeluarAll += nominal;
           if (tglStr === currentMonthStr) {
             totalKeluarBulan += nominal;
-            // Kumpulkan nominal pengeluaran berdasarkan kategori bulan ini
             expenseByCategory[t.Kategori] = (expenseByCategory[t.Kategori] || 0) + nominal;
           }
         }
@@ -793,11 +788,6 @@
       document.getElementById('dash-pemasukan-bulan-ini').innerText = formatRupiah(totalMasukBulan);
       document.getElementById('dash-pengeluaran-bulan-ini').innerText = formatRupiah(totalKeluarBulan);
       
-      // ============================================================
-      // LOGIKA BARU: TOP 3 PENGELUARAN TERBESAR (DENGAN TAMPILAN BAR & BUDGET)
-      // ============================================================
-      
-      // 1. Kumpulkan data pengeluaran dan gabungkan dengan target budget
       const listData = Object.keys(expenseByCategory).map(catName => {
         const catObj = appData.categories.find(c => c.Nama_Kategori === catName);
         const budgetObj = appData.budgets.find(b => b.ID_Kategori === catName || (catObj && b.ID_Kategori === catObj.ID_Kategori));
@@ -814,7 +804,6 @@
         };
       });
 
-      // 2. Urutkan berdasarkan pengeluaran riil terbesar, lalu ambil Top 3
       const topExpenses = listData.sort((a, b) => b.usedVal - a.usedVal).slice(0, 3);
 
       const criticalContainer = document.getElementById('critical-budget-list');
@@ -987,108 +976,103 @@
     }
 
     async function simpanTransaksi() {
-  const nominal = getUnformattedNominal(document.getElementById('input-nominal').value);
-  const kategori = document.getElementById('input-kategori').value;
-  const tanggal = document.getElementById('input-tanggal').value || new Date().toISOString().slice(0, 10);
-  const catatan = document.getElementById('input-catatan').value;
+      const nominal = getUnformattedNominal(document.getElementById('input-nominal').value);
+      const kategori = document.getElementById('input-kategori').value;
+      const tanggal = document.getElementById('input-tanggal').value || new Date().toISOString().slice(0, 10);
+      const catatan = document.getElementById('input-catatan').value;
 
-  if (!nominal || nominal <= 0) {
-    Swal.fire({ ...getSwalConfig(), title: 'Error', text: 'Nominal transaksi harus lebih dari 0', icon: 'error' });
-    return;
-  }
+      if (!nominal || nominal <= 0) {
+        Swal.fire({ ...getSwalConfig(), title: 'Error', text: 'Nominal transaksi harus lebih dari 0', icon: 'error' });
+        return;
+      }
 
-  const newTrx = {
-    ID_Transaksi: 'TRX_' + new Date().getTime(),
-    Tanggal: tanggal,
-    Jenis: currentJenisInput,
-    Kategori: kategori,
-    Nominal: nominal,
-    Catatan: catatan
-  };
+      const newTrx = {
+        ID_Transaksi: 'TRX_' + new Date().getTime(),
+        Tanggal: tanggal,
+        Jenis: currentJenisInput,
+        Kategori: kategori,
+        Nominal: nominal,
+        Catatan: catatan
+      };
 
-  try {
-    Swal.fire({ title: 'Mencatat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    await callApi('saveTransaction', { tanggal: tanggal, jenis: currentJenisInput, kategori: kategori, nominal: nominal, catatan: catatan });
-  } catch (err) {
-    console.warn("Simpan ke server gagal, menyimpan ke lokal:", err.message);
-  }
+      try {
+        Swal.fire({ title: 'Mencatat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        await callApi('saveTransaction', { tanggal: tanggal, jenis: currentJenisInput, kategori: kategori, nominal: nominal, catatan: catatan });
+      } catch (err) {
+        console.warn("Simpan ke server gagal, menyimpan ke lokal:", err.message);
+      }
 
-  appData.transactions.unshift(newTrx);
-  saveLocalData();
+      appData.transactions.unshift(newTrx);
+      saveLocalData();
 
-  // Reset Form
-  document.getElementById('input-nominal').value = '';
-  document.getElementById('input-catatan').value = '';
-  if (document.getElementById('smart-text-input')) {
-    document.getElementById('smart-text-input').value = '';
-  }
+      document.getElementById('input-nominal').value = '';
+      document.getElementById('input-catatan').value = '';
+      if (document.getElementById('smart-text-input')) {
+        document.getElementById('smart-text-input').value = '';
+      }
 
-  // Set filter bulan di UI Riwayat ke bulan transaksi yang BARU BISA DISIMPAN
-  const filterMonthEl = document.getElementById('filter-month');
-  if (filterMonthEl) {
-    filterMonthEl.value = tanggal.slice(0, 7);
-  }
+      const filterMonthEl = document.getElementById('filter-month');
+      if (filterMonthEl) {
+        filterMonthEl.value = tanggal.slice(0, 7);
+      }
 
-  // Render ulang UI Riwayat & Dashboard di memori
-  if (typeof renderHistory === 'function') renderHistory();
-  
-  nav('dashboard');
-  Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
-}
+      if (typeof renderHistory === 'function') renderHistory();
+      
+      nav('dashboard');
+      Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
+    }
 
     function renderHistory() {
-  const container = document.getElementById('history-list');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  const filterMonthEl = document.getElementById('filter-month');
-  // Pastikan input HTML filter-month terisi nilai bulan jika masih kosong
-  if (filterMonthEl && !filterMonthEl.value) {
-    filterMonthEl.value = new Date().toISOString().slice(0, 7);
-  }
-  
-  const monthVal = filterMonthEl ? filterMonthEl.value : new Date().toISOString().slice(0, 7);
-  const typeVal = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'All';
+      const container = document.getElementById('history-list');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      const filterMonthEl = document.getElementById('filter-month');
+      if (filterMonthEl && !filterMonthEl.value) {
+        filterMonthEl.value = new Date().toISOString().slice(0, 7);
+      }
+      
+      const monthVal = filterMonthEl ? filterMonthEl.value : new Date().toISOString().slice(0, 7);
+      const typeVal = document.getElementById('filter-type') ? document.getElementById('filter-type').value : 'All';
 
-  // 1. Filter data berdasarkan bulan dan jenis transaksi
-  const filtered = appData.transactions.filter(t => {
-    const matchMonth = (t.Tanggal || '').slice(0, 7) === monthVal;
-    const matchType = typeVal === 'All' || t.Jenis === typeVal;
-    return matchMonth && matchType;
-  });
+      const filtered = appData.transactions.filter(t => {
+        const matchMonth = (t.Tanggal || '').slice(0, 7) === monthVal;
+        const matchType = typeVal === 'All' || t.Jenis === typeVal;
+        return matchMonth && matchType;
+      });
 
-  // 2. Urutkan data dari transaksi terbaru ke transaksi tertua
-  filtered.sort((a, b) => {
-    const dateA = new Date(a.Created_At || a.Tanggal);
-    const dateB = new Date(b.Created_At || b.Tanggal);
-    return dateB - dateA;
-  });
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.Created_At || a.Tanggal);
+        const dateB = new Date(b.Created_At || b.Tanggal);
+        return dateB - dateA;
+      });
 
-  if (filtered.length === 0) {
-    container.innerHTML = `<div class="text-center text-sm text-[var(--ink-soft)] py-8 font-medium">Belum ada catatan di bulan ini.</div>`;
-    return;
-  }
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center text-sm text-[var(--ink-soft)] py-8 font-medium">Belum ada catatan di bulan ini.</div>`;
+        return;
+      }
 
-  filtered.forEach(t => {
-    const isIncome = t.Jenis === 'Pemasukan';
-    const textColorClass = isIncome ? 'text-[var(--stamp-green)]' : 'text-[var(--stamp-red)]';
-    
-    const item = document.createElement('div');
-    item.className = 'flex justify-between items-center py-3 border-b border-dashed border-[var(--paper-line)]';
-    item.innerHTML = `
-      <div>
-        <div class="font-bold text-sm text-[var(--ink)]">${t.Kategori}</div>
-        <div class="text-[11px] text-[var(--ink-soft)] text-mono mt-0.5">${t.Tanggal} • ${t.Catatan || '-'}</div>
-      </div>
-      <div class="flex items-center gap-4">
-        <span class="font-bold text-mono ${textColorClass}">${isIncome ? '+' : '-'}${formatRupiah(t.Nominal)}</span>
-        <button onclick="deleteTx('${t.ID_Transaksi}')" class="text-[var(--ink-soft)] hover:text-[var(--stamp-red)] text-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
-      </div>
-    `;
-    container.appendChild(item);
-  });
-}
+      filtered.forEach(t => {
+        const isIncome = t.Jenis === 'Pemasukan';
+        const textColorClass = isIncome ? 'text-[var(--stamp-green)]' : 'text-[var(--stamp-red)]';
+        
+        const item = document.createElement('div');
+        item.className = 'flex justify-between items-center py-3 border-b border-dashed border-[var(--paper-line)]';
+        item.innerHTML = `
+          <div>
+            <div class="font-bold text-sm text-[var(--ink)]">${t.Kategori}</div>
+            <div class="text-[11px] text-[var(--ink-soft)] text-mono mt-0.5">${t.Tanggal} • ${t.Catatan || '-'}</div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="font-bold text-mono ${textColorClass}">${isIncome ? '+' : '-'}${formatRupiah(t.Nominal)}</span>
+            <button onclick="deleteTx('${t.ID_Transaksi}')" class="text-[var(--ink-soft)] hover:text-[var(--stamp-red)] text-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
     function deleteTx(id) {
       Swal.fire({
         ...getSwalConfig(), title: 'Hapus Catatan?', text: 'Coretan ini akan dihapus permanen.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Hapus'
@@ -1139,7 +1123,6 @@
           };
         });
 
-      // Urutkan dari Target Terbesar ke Terkecil
       listData.sort((a, b) => b.targetVal - a.targetVal);
 
       listData.forEach(item => {
@@ -1234,430 +1217,438 @@
     }
 
    function renderExtra() {
-  const extraView = document.getElementById('view-extra');
-  if (!extraView || extraView.classList.contains('hidden')) return;
+    const extraView = document.getElementById('view-extra');
+    if (!extraView || extraView.classList.contains('hidden')) return;
 
-  const monthInput = document.getElementById('extra-filter-month');
-  if (monthInput && !monthInput.value) {
-    monthInput.value = new Date().toISOString().slice(0, 7);
-  }
-  const selectedMonthStr = monthInput ? monthInput.value : new Date().toISOString().slice(0, 7);
+    const monthInput = document.getElementById('extra-filter-month');
+    if (monthInput && !monthInput.value) {
+      monthInput.value = new Date().toISOString().slice(0, 7);
+    }
+    const selectedMonthStr = monthInput ? monthInput.value : new Date().toISOString().slice(0, 7);
 
-  const year = parseInt(selectedMonthStr.split('-')[0]);
-  const month = parseInt(selectedMonthStr.split('-')[1]);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const dailyData = new Array(daysInMonth).fill(0);
+    const year = parseInt(selectedMonthStr.split('-')[0]);
+    const month = parseInt(selectedMonthStr.split('-')[1]);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const dailyData = new Array(daysInMonth).fill(0);
 
-  if (appData && appData.transactions) {
-    appData.transactions.forEach(t => {
-      if (t.Jenis === 'Pengeluaran' && (t.Tanggal || '').slice(0, 7) === selectedMonthStr) {
-        const nom = parseFloat(t.Nominal) || 0;
-        const day = parseInt((t.Tanggal || '').slice(8, 10));
-        if (!isNaN(day) && day >= 1 && day <= daysInMonth) {
-          dailyData[day - 1] += nom;
-        }
-      }
-    });
-  }
-
-  const chartEl = document.getElementById('expenseChart');
-  if (chartEl) {
-    const ctx = chartEl.getContext('2d');
-    if (myChart) myChart.destroy();
-
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const themeColor = isDark ? '#D4AF37' : '#B8903B';
-    const bgGradientColor = 'rgba(184, 144, 59, 0.15)';
-    const dayLabels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
-
-    myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dayLabels,
-        datasets: [{
-          label: 'Pengeluaran Harian (Rp)',
-          data: dailyData,
-          borderColor: themeColor,
-          backgroundColor: bgGradientColor,
-          borderWidth: 2,
-          fill: true,
-          tension: 0.3,
-          pointBackgroundColor: themeColor,
-          pointRadius: 4,
-          pointHoverRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        onClick: (event, elements, chart) => {
-          let clickedDay = null;
-
-          if (elements && elements.length > 0) {
-            const index = elements[0].index;
-            clickedDay = index + 1;
-          } else if (chart) {
-            const canvasPosition = Chart.helpers.getRelativePosition(event, chart);
-            const dataX = chart.scales.x.getValueForPixel(canvasPosition.x);
-            if (dataX !== undefined && dataX !== null && !isNaN(dataX)) {
-              clickedDay = Math.round(dataX) + 1;
-            }
+    if (appData && appData.transactions) {
+      appData.transactions.forEach(t => {
+        if (t.Jenis === 'Pengeluaran' && (t.Tanggal || '').slice(0, 7) === selectedMonthStr) {
+          const nom = parseFloat(t.Nominal) || 0;
+          const day = parseInt((t.Tanggal || '').slice(8, 10));
+          if (!isNaN(day) && day >= 1 && day <= daysInMonth) {
+            dailyData[day - 1] += nom;
           }
+        }
+      });
+    }
 
-          if (clickedDay !== null && clickedDay >= 1 && clickedDay <= daysInMonth) {
-            const dayStr = clickedDay < 10 ? '0' + clickedDay : '' + clickedDay;
-            const fullTargetDate = `${selectedMonthStr}-${dayStr}`;
+    const chartEl = document.getElementById('expenseChart');
+    if (chartEl) {
+      const ctx = chartEl.getContext('2d');
+      if (myChart) myChart.destroy();
 
-            const dayTransactions = (appData.transactions || []).filter(t => {
-              if (t.Jenis !== 'Pengeluaran') return false;
-              const tglStr = parseDateToYmd(t.Tanggal);
-              return tglStr === fullTargetDate;
-            });
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const themeColor = isDark ? '#D4AF37' : '#B8903B';
+      const bgGradientColor = 'rgba(184, 144, 59, 0.15)';
+      const dayLabels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`);
 
-            if (dayTransactions.length === 0) {
-              Swal.fire({
-                ...getSwalConfig(),
-                title: `Tanggal ${clickedDay}`,
-                text: 'Tidak ada catatan pengeluaran di tanggal ini.',
-                icon: 'info'
-              });
-              return;
+      myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dayLabels,
+          datasets: [{
+            label: 'Pengeluaran Harian (Rp)',
+            data: dailyData,
+            borderColor: themeColor,
+            backgroundColor: bgGradientColor,
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: themeColor,
+            pointRadius: 4,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: (event, elements, chart) => {
+            let clickedDay = null;
+
+            if (elements && elements.length > 0) {
+              const index = elements[0].index;
+              clickedDay = index + 1;
+            } else if (chart) {
+              const canvasPosition = Chart.helpers.getRelativePosition(event, chart);
+              const dataX = chart.scales.x.getValueForPixel(canvasPosition.x);
+              if (dataX !== undefined && dataX !== null && !isNaN(dataX)) {
+                clickedDay = Math.round(dataX) + 1;
+              }
             }
 
-            let totalHari = 0;
-            let htmlList = `<div class="text-left text-xs space-y-2 mt-2">`;
-            dayTransactions.forEach(t => {
-              const nom = parseFloat(t.Nominal) || 0;
-              totalHari += nom;
-              const catObj = (appData.categories || []).find(c => c.Nama_Kategori === t.Kategori);
-              const icon = catObj ? catObj.Ikon : '📌';
+            if (clickedDay !== null && clickedDay >= 1 && clickedDay <= daysInMonth) {
+              const dayStr = clickedDay < 10 ? '0' + clickedDay : '' + clickedDay;
+              const fullTargetDate = `${selectedMonthStr}-${dayStr}`;
+
+              const dayTransactions = (appData.transactions || []).filter(t => {
+                if (t.Jenis !== 'Pengeluaran') return false;
+                const tglStr = parseDateToYmd(t.Tanggal);
+                return tglStr === fullTargetDate;
+              });
+
+              if (dayTransactions.length === 0) {
+                Swal.fire({
+                  ...getSwalConfig(),
+                  title: `Tanggal ${clickedDay}`,
+                  text: 'Tidak ada catatan pengeluaran di tanggal ini.',
+                  icon: 'info'
+                });
+                return;
+              }
+
+              let totalHari = 0;
+              let htmlList = `<div class="text-left text-xs space-y-2 mt-2">`;
+              dayTransactions.forEach(t => {
+                const nom = parseFloat(t.Nominal) || 0;
+                totalHari += nom;
+                const catObj = (appData.categories || []).find(c => c.Nama_Kategori === t.Kategori);
+                const icon = catObj ? catObj.Ikon : '📌';
+
+                htmlList += `
+                  <div class="flex justify-between items-center p-2 border-b border-dashed border-[var(--paper-line)]">
+                    <div>
+                      <div class="font-bold text-[var(--ink)]">${icon} ${t.Kategori}</div>
+                      <div class="text-[10px] text-[var(--ink-soft)] text-mono">${t.Catatan || '-'}</div>
+                    </div>
+                    <div class="font-bold text-mono text-[var(--stamp-red)]">${formatRupiah(nom)}</div>
+                  </div>`;
+              });
 
               htmlList += `
-                <div class="flex justify-between items-center p-2 border-b border-dashed border-[var(--paper-line)]">
-                  <div>
-                    <div class="font-bold text-[var(--ink)]">${icon} ${t.Kategori}</div>
-                    <div class="text-[10px] text-[var(--ink-soft)] text-mono">${t.Catatan || '-'}</div>
-                  </div>
-                  <div class="font-bold text-mono text-[var(--stamp-red)]">${formatRupiah(nom)}</div>
-                </div>`;
-            });
+                <div class="flex justify-between items-center font-bold pt-2 text-sm text-[var(--ink)]">
+                  <span>TOTAL PENGELUARAN:</span>
+                  <span class="text-[var(--stamp-red)]">${formatRupiah(totalHari)}</span>
+                </div>
+              </div>`;
 
-            htmlList += `
-              <div class="flex justify-between items-center font-bold pt-2 text-sm text-[var(--ink)]">
-                <span>TOTAL PENGELUARAN:</span>
-                <span class="text-[var(--stamp-red)]">${formatRupiah(totalHari)}</span>
-              </div>
-            </div>`;
-
-            Swal.fire({
-              ...getSwalConfig(),
-              title: `📌 Rincian ${clickedDay} ${new Date(selectedMonthStr + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`,
-              html: htmlList,
-              showConfirmButton: true,
-              confirmButtonText: 'Tutup'
-            });
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context) { return ' Total: ' + formatRupiah(context.raw); }
+              Swal.fire({
+                ...getSwalConfig(),
+                title: `📌 Rincian ${clickedDay} ${new Date(selectedMonthStr + '-01').toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`,
+                html: htmlList,
+                showConfirmButton: true,
+                confirmButtonText: 'Tutup'
+              });
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) { return ' Total: ' + formatRupiah(context.raw); }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: isDark ? '#EAE3D2' : '#22314A', font: { family: 'IBM Plex Mono', size: 10 } },
+              grid: { color: isDark ? 'rgba(234, 227, 210, 0.1)' : 'rgba(34, 49, 74, 0.1)' }
+            },
+            y: {
+              ticks: {
+                color: isDark ? '#EAE3D2' : '#22314A',
+                font: { family: 'IBM Plex Mono', size: 10 },
+                callback: function(value) { return 'Rp ' + (value / 1000) + 'k'; }
+              },
+              grid: { color: isDark ? 'rgba(234, 227, 210, 0.1)' : 'rgba(34, 49, 74, 0.1)' }
             }
           }
-        },
-        scales: {
-          x: {
-            ticks: { color: isDark ? '#EAE3D2' : '#22314A', font: { family: 'IBM Plex Mono', size: 10 } },
-            grid: { color: isDark ? 'rgba(234, 227, 210, 0.1)' : 'rgba(34, 49, 74, 0.1)' }
-          },
-          y: {
-            ticks: {
-              color: isDark ? '#EAE3D2' : '#22314A',
-              font: { family: 'IBM Plex Mono', size: 10 },
-              callback: function(value) { return 'Rp ' + (value / 1000) + 'k'; }
-            },
-            grid: { color: isDark ? 'rgba(234, 227, 210, 0.1)' : 'rgba(34, 49, 74, 0.1)' }
-          }
         }
-      }
-    });
-  }
-
-  // Render Catatan Utang   
- const debtContainer = document.getElementById('debt-list');
-  if (debtContainer) {
-    debtContainer.innerHTML = '';
-    
-    if (!appData.debts || appData.debts.length === 0) {
-      debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--ink-soft)] py-4 font-medium">Belum ada catatan pinjaman.</div>`;
-    } else {
-      appData.debts.forEach(d => {
-        const isLunas = d.Status === 'Lunas';
-        const card = document.createElement('div');
-        card.className = 'vintage-card p-4 space-y-2';
-        
-        const tglPinjam = d.Tanggal_Pinjam || d.Tanggal || '-';
-        const tglTempo = d.Tanggal_Jatuh_Tempo || d.Tempo || '-';
-        
-        // VISUAL ALIASING: Menerjemahkan istilah DB ke bahasa Awam
-        const labelJenis = d.Jenis === 'Utang' ? 'Terima Pinjaman' : 'Beri Pinjaman';
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="eyebrow text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${labelJenis}</div>
-              <div class="font-bold text-sm text-[var(--ink)]">${d.Nama_Pemberi_Pinjaman || d.Nama}</div>
-            </div>
-            <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] text-mono py-1">
-            <div>Total: ${formatRupiah(d.Total_Utang || d.Nominal)}</div>
-            <div>Sisa: <b class="text-[var(--stamp-red)]">${formatRupiah(d.Sisa_Utang !== undefined ? d.Sisa_Utang : d.Nominal)}</b></div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 text-[11px] text-[var(--ink-soft)] pt-2 border-t border-[var(--paper-line)]">
-            <div>
-              <span class="block text-[9px] uppercase tracking-wider">Tgl Pinjam</span>
-              <span class="font-medium text-[var(--ink)]">${tglPinjam}</span>
-            </div>
-            <div class="text-right">
-              <span class="block text-[9px] uppercase tracking-wider">Jatuh Tempo</span>
-              <span class="font-medium text-[var(--ink)]">${tglTempo}</span>
-            </div>
-          </div>
-
-          ${!isLunas ? `
-            <div class="pt-1 flex justify-end">
-              <button onclick="openPayDebtModal('${d.ID_Utang}', '${d.Nama_Pemberi_Pinjaman \vert{}\vert{} d.Nama}',${d.Sisa_Utang || d.Nominal})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar / Cicil</button>
-            </div>
-          ` : ''}
-        `;
-        debtContainer.appendChild(card);
       });
     }
-  }
-}
 
-    function openAddDebtModal() { 
-  // 🟢 SET OTOMATIS TANGGAL PINJAM DENGAN HARI INI
-  const inputTanggal = document.getElementById('debt-tanggal');
-  if (inputTanggal) {
-    inputTanggal.value = new Date().toISOString().slice(0, 10);
-  }
+    // Render Catatan Utang (AMAN DARI FORMATTING CHAT)
+    const debtContainer = document.getElementById('debt-list');
+    if (debtContainer) {
+      debtContainer.innerHTML = '';
+      
+      if (!appData.debts || appData.debts.length === 0) {
+        debtContainer.innerHTML = `<div class="text-center text-xs text-[var(--ink-soft)] py-4 font-medium">Belum ada catatan pinjaman.</div>`;
+      } else {
+        appData.debts.forEach(d => {
+          const isLunas = d.Status === 'Lunas';
+          const card = document.createElement('div');
+          card.className = 'vintage-card p-4 space-y-2';
+          
+          const tglPinjam = d.Tanggal_Pinjam || d.Tanggal || '-';
+          const tglTempo = d.Tanggal_Jatuh_Tempo || d.Tempo || '-';
+          
+          // VISUAL ALIASING: Menerjemahkan istilah DB ke bahasa Awam
+          const labelJenis = d.Jenis === 'Utang' ? 'Terima Pinjaman' : 'Beri Pinjaman';
 
-  // Kosongkan field input lain
-  document.getElementById('debt-nama').value = '';
-  document.getElementById('debt-nominal').value = '';
-  document.getElementById('debt-tempo').value = '';
+          // DEFENSIVE PROGRAMMING: Ekstrak variabel agar tidak hancur di dalam template literal
+          const namaPihak = d.Nama_Pemberi_Pinjaman || d.Nama || '-';
+          const nominalTotal = d.Total_Utang || d.Nominal || 0;
+          const nominalSisa = d.Sisa_Utang !== undefined ? d.Sisa_Utang : (d.Nominal || 0);
 
-  document.getElementById('add-debt-modal').classList.remove('hidden'); 
-}
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="eyebrow text-[10px] text-[var(--ink-soft)] uppercase tracking-wider">${labelJenis}</div>
+                <div class="font-bold text-sm text-[var(--ink)]">${namaPihak}</div>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded border ${isLunas ? 'border-[var(--stamp-green)] text-[var(--stamp-green)]' : 'border-[var(--stamp-red)] text-[var(--stamp-red)]'}">${d.Status}</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 text-xs text-[var(--ink-soft)] text-mono py-1">
+              <div>Total: ${formatRupiah(nominalTotal)}</div>
+              <div>Sisa: <b class="text-[var(--stamp-red)]">${formatRupiah(nominalSisa)}</b></div>
+            </div>
 
-function closeAddDebtModal() { 
-  document.getElementById('add-debt-modal').classList.add('hidden'); 
-}
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-[var(--ink-soft)] pt-2 border-t border-[var(--paper-line)]">
+              <div>
+                <span class="block text-[9px] uppercase tracking-wider">Tgl Pinjam</span>
+                <span class="font-medium text-[var(--ink)]">${tglPinjam}</span>
+              </div>
+              <div class="text-right">
+                <span class="block text-[9px] uppercase tracking-wider">Jatuh Tempo</span>
+                <span class="font-medium text-[var(--ink)]">${tglTempo}</span>
+              </div>
+            </div>
 
-async function saveDebt() {
-  const nama = document.getElementById('debt-nama').value;
-  const jenis = document.getElementById('debt-jenis').value;
-  const nominal = getUnformattedNominal(document.getElementById('debt-nominal').value);
-  const tempo = document.getElementById('debt-tempo').value;
-  
-  const tanggalInput = document.getElementById('debt-tanggal') ? document.getElementById('debt-tanggal').value : '';
-  const tanggal = tanggalInput || new Date().toISOString().slice(0, 10);
-  
-  // 🟢 DITAMBAHKAN: Mengambil nilai checkbox
-  const sync = document.getElementById('debt-catat-saldo') ? document.getElementById('debt-catat-saldo').checked : false;
+            ${!isLunas ? `
+              <div class="pt-1 flex justify-end">
+                <button onclick="openPayDebtModal('${d.ID_Utang}', '${namaPihak}',${nominalSisa})" class="vintage-btn vintage-btn-outline text-[10px] px-3 py-1">Bayar / Cicil</button>
+              </div>
+            ` : ''}
+          `;
+          debtContainer.appendChild(card);
+        });
+      }
+    }
+  } // <-- Penutup fungsi renderExtra yang valid
 
-  if (!nama || nominal <= 0) {
-    Swal.fire({ ...getSwalConfig(), title: 'Input Inkomplit', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
-    return;
-  }
+  function openAddDebtModal() { 
+    const inputTanggal = document.getElementById('debt-tanggal');
+    if (inputTanggal) {
+      inputTanggal.value = new Date().toISOString().slice(0, 10);
+    }
 
-  try {
-    Swal.fire({ title: 'Menyimpan Utang...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    
-    // 🟢 DIBENAHI: Mengirimkan syncToTransaction ke backend
-    await callApi('addDebt', { 
-      nama: nama, 
-      jenis: jenis, 
-      totalUtang: nominal, 
-      jatuhTempo: tempo,
-      tanggal: tanggal,
-      syncToTransaction: sync
-    });
-
-    closeAddDebtModal();
     document.getElementById('debt-nama').value = '';
     document.getElementById('debt-nominal').value = '';
-    if (document.getElementById('debt-tempo')) document.getElementById('debt-tempo').value = '';
-    if (document.getElementById('debt-catat-saldo')) document.getElementById('debt-catat-saldo').checked = true;
-    
-    await loadInitialData(); // Akan me-refresh Dashboard & Saldo otomatis
-    Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan utang tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
-  } catch (err) {
-    Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
+    document.getElementById('debt-tempo').value = '';
+
+    document.getElementById('add-debt-modal').classList.remove('hidden'); 
   }
-}
-    function openPayDebtModal(id, nama, sisa) {
-      document.getElementById('pay-debt-id').value = id;
-      document.getElementById('pay-debt-target-info').innerText = `Pembayaran untuk: ${nama} (Sisa: ${formatRupiah(sisa)})`;
-      document.getElementById('pay-debt-modal').classList.remove('hidden');
-    }
-    function closePayDebtModal() { document.getElementById('pay-debt-modal').classList.add('hidden'); }
 
-    async function processPayDebt() {
-      const id = document.getElementById('pay-debt-id').value;
-      const nominal = getUnformattedNominal(document.getElementById('pay-debt-nominal').value);
-      const catatSaldo = document.getElementById('pay-debt-catat-saldo').checked;
+  function closeAddDebtModal() { 
+    document.getElementById('add-debt-modal').classList.add('hidden'); 
+  }
 
-      if (!nominal || nominal <= 0) return;
+  async function saveDebt() {
+    const nama = document.getElementById('debt-nama').value;
+    const jenis = document.getElementById('debt-jenis').value;
+    const nominal = getUnformattedNominal(document.getElementById('debt-nominal').value);
+    const tempo = document.getElementById('debt-tempo').value;
+    
+    const tanggalInput = document.getElementById('debt-tanggal') ? document.getElementById('debt-tanggal').value : '';
+    const tanggal = tanggalInput || new Date().toISOString().slice(0, 10);
+    
+    const sync = document.getElementById('debt-catat-saldo') ? document.getElementById('debt-catat-saldo').checked : false;
 
-      try {
-        Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        await callApi('payDebt', { id: id, nominal: nominal, catatSaldo: catatSaldo });
-      } catch (err) {
-        console.warn("Pay debt ke server gagal, proses lokal:", err.message);
-      }
-
-      const debt = appData.debts.find(d => String(d.ID_Utang).trim() === String(id).trim());
-      if (debt) {
-        debt.Sudah_Dibayar = (parseFloat(debt.Sudah_Dibayar) || 0) + nominal;
-        debt.Sisa_Utang = (parseFloat(debt.Total_Utang) || 0) - debt.Sudah_Dibayar;
-        if (debt.Sisa_Utang <= 0) {
-          debt.Sisa_Utang = 0;
-          debt.Status = 'Lunas';
-        }
-      }
-      saveLocalData();
-
-      closePayDebtModal();
-      document.getElementById('pay-debt-nominal').value = '';
-      renderExtra();
-      Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Pembayaran dicatat!', icon: 'success', timer: 1200, showConfirmButton: false });
+    if (!nama || nominal <= 0) {
+      Swal.fire({ ...getSwalConfig(), title: 'Input Inkomplit', text: 'Isi Nama dan Nominal utang.', icon: 'warning' });
+      return;
     }
 
-    function openManageCategoryModal() {
-      renderCategoryListModal();
-      document.getElementById('category-modal').classList.remove('hidden');
-    }
-    function closeManageCategoryModal() { document.getElementById('category-modal').classList.add('hidden'); }
-
-    function renderCategoryListModal() {
-      const container = document.getElementById('modal-category-list');
-      container.innerHTML = '';
-      appData.categories.forEach(c => {
-        const row = document.createElement('div');
-        row.className = 'flex justify-between items-center text-sm py-2 px-3 border border-[var(--paper-line)] bg-[var(--paper)] rounded';
-        
-        const btnDel = document.createElement('button');
-        btnDel.className = 'text-[var(--stamp-red)] p-1';
-        btnDel.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-        btnDel.onclick = function() { deleteCategory(c.Nama_Kategori); };
-
-        row.innerHTML = `<span>${c.Ikon || '📌'} ${c.Nama_Kategori} <span class="text-[10px] text-[var(--ink-soft)] ml-1">(${c.Jenis})</span></span>`;
-        row.appendChild(btnDel);
-        container.appendChild(row);
-      });
-    }
-
-    async function saveCategory() {
-      const ikon = document.getElementById('cat-icon-input').value || '📌';
-      const nama = document.getElementById('cat-name-input').value;
-      const jenis = document.getElementById('cat-type-input').value;
-      if (!nama) return;
-
-      const newCat = {
-        ID_Kategori: 'CAT_' + new Date().getTime(),
-        Ikon: ikon,
-        Nama_Kategori: nama,
-        Jenis: jenis
-      };
-
-      try {
-        Swal.fire({ title: 'Menyimpan Kategori...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        await callApi('saveCategory', { Ikon: ikon, Nama_Kategori: nama, Jenis: jenis, Warna_Badge: '#B8903B' });
-      } catch (err) {
-        console.warn("Save category server gagal, simpan lokal:", err.message);
-      }
-
-      appData.categories.push(newCat);
-      saveLocalData();
-
-      document.getElementById('cat-name-input').value = '';
-      document.getElementById('cat-icon-input').value = '';
-      populateCategoryDropdown();
-      renderCategoryListModal();
-      Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: `Kategori ${nama} ditambahkan.`, icon: 'success', timer: 1200, showConfirmButton: false });
-    }
-
-    async function deleteCategory(namaKategori) {
-      try {
-        Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        await callApi('deleteCategory', { Nama_Kategori: namaKategori });
-      } catch (err) {
-        console.warn("Delete category server gagal, hapus lokal:", err.message);
-      }
-
-      appData.categories = appData.categories.filter(c => c.Nama_Kategori !== namaKategori);
-      saveLocalData();
-
-      populateCategoryDropdown();
-      renderCategoryListModal();
-      Swal.fire({ ...getSwalConfig(), title: 'Terhapus!', icon: 'success', timer: 1200, showConfirmButton: false });
-    }
-
-    async function triggerAIAnalysis() {
-      Swal.fire({
-        ...getSwalConfig(),
-        title: 'Asisten AI',
-        html: '<div class="text-left text-sm leading-relaxed p-2 text-mono" id="ai-modal-content">Sedang menganalisa buku catatan bulan ini...</div>',
-        showConfirmButton: true, confirmButtonText: 'Tutup'
+    try {
+      Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      
+      await callApi('addDebt', { 
+        nama: nama, 
+        jenis: jenis, 
+        totalUtang: nominal, 
+        jatuhTempo: tempo,
+        tanggal: tanggal,
+        syncToTransaction: sync
       });
 
-      const now = new Date();
-      const currentMonthStr = now.toISOString().slice(0, 7);
-      let totalMasuk = 0, totalKeluar = 0;
-      const catMap = {};
+      closeAddDebtModal();
+      document.getElementById('debt-nama').value = '';
+      document.getElementById('debt-nominal').value = '';
+      if (document.getElementById('debt-tempo')) document.getElementById('debt-tempo').value = '';
+      if (document.getElementById('debt-catat-saldo')) document.getElementById('debt-catat-saldo').checked = true;
+      
+      await loadInitialData(); 
+      Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Catatan tersimpan!', icon: 'success', timer: 1200, showConfirmButton: false });
+    } catch (err) {
+      Swal.fire({ ...getSwalConfig(), title: 'Gagal', text: err.message, icon: 'error' });
+    }
+  }
 
-      appData.transactions.forEach(t => {
-        if ((t.Tanggal || '').slice(0, 7) === currentMonthStr) {
-          const nom = parseFloat(t.Nominal) || 0;
-          if (t.Jenis === 'Pemasukan') totalMasuk += nom;
-          if (t.Jenis === 'Pengeluaran') {
-            totalKeluar += nom;
-            catMap[t.Kategori] = (catMap[t.Kategori] || 0) + nom;
-          }
-        }
-      });
+  function openPayDebtModal(id, nama, sisa) {
+    document.getElementById('pay-debt-id').value = id;
+    document.getElementById('pay-debt-target-info').innerText = `Pembayaran untuk: ${nama} (Sisa: ${formatRupiah(sisa)})`;
+    document.getElementById('pay-debt-modal').classList.remove('hidden');
+  }
 
-      let topCat = '-', topNominal = 0;
-      for (let cat in catMap) {
-        if (catMap[cat] > topNominal) { topNominal = catMap[cat]; topCat = cat; }
-      }
+  function closePayDebtModal() { 
+    document.getElementById('pay-debt-modal').classList.add('hidden'); 
+  }
 
-      try {
-        const aiRes = await callApi('getAIAnalysis', {
-          pemasukan: totalMasuk.toLocaleString('id-ID'),
-          pengeluaran: totalKeluar.toLocaleString('id-ID'),
-          saldo: (totalMasuk - totalKeluar).toLocaleString('id-ID'),
-          topKategori: topCat, topNominal: topNominal.toLocaleString('id-ID')
-        });
-        const el = document.getElementById('ai-modal-content');
-        if (el) el.innerHTML = `${aiRes}`;
-      } catch (err) {
-        const el = document.getElementById('ai-modal-content');
-        if (el) el.innerHTML = `Pencatatan bulan ini terlihat rapi. Pertahankan kebiasaan mencatatmu!`;
-      }
+  async function processPayDebt() {
+    const id = document.getElementById('pay-debt-id').value;
+    const nominal = getUnformattedNominal(document.getElementById('pay-debt-nominal').value);
+    const catatSaldo = document.getElementById('pay-debt-catat-saldo').checked;
+
+    if (!nominal || nominal <= 0) return;
+
+    try {
+      Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await callApi('payDebt', { id: id, nominal: nominal, catatSaldo: catatSaldo });
+    } catch (err) {
+      console.warn("Pay debt ke server gagal, proses lokal:", err.message);
     }
 
-    window.onload = function() {
-      document.getElementById('input-tanggal').value = new Date().toISOString().slice(0, 10);
-      document.getElementById('filter-month').value = new Date().toISOString().slice(0, 7);
-      loadInitialData();
+    const debt = appData.debts.find(d => String(d.ID_Utang).trim() === String(id).trim());
+    if (debt) {
+      debt.Sudah_Dibayar = (parseFloat(debt.Sudah_Dibayar) || 0) + nominal;
+      debt.Sisa_Utang = (parseFloat(debt.Total_Utang) || 0) - debt.Sudah_Dibayar;
+      if (debt.Sisa_Utang <= 0) {
+        debt.Sisa_Utang = 0;
+        debt.Status = 'Lunas';
+      }
+    }
+    saveLocalData();
+
+    closePayDebtModal();
+    document.getElementById('pay-debt-nominal').value = '';
+    renderExtra();
+    Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: 'Pembayaran dicatat!', icon: 'success', timer: 1200, showConfirmButton: false });
+  }
+
+  function openManageCategoryModal() {
+    renderCategoryListModal();
+    document.getElementById('category-modal').classList.remove('hidden');
+  }
+
+  function closeManageCategoryModal() { 
+    document.getElementById('category-modal').classList.add('hidden'); 
+  }
+
+  function renderCategoryListModal() {
+    const container = document.getElementById('modal-category-list');
+    container.innerHTML = '';
+    appData.categories.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'flex justify-between items-center text-sm py-2 px-3 border border-[var(--paper-line)] bg-[var(--paper)] rounded';
+      
+      const btnDel = document.createElement('button');
+      btnDel.className = 'text-[var(--stamp-red)] p-1';
+      btnDel.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+      btnDel.onclick = function() { deleteCategory(c.Nama_Kategori); };
+
+      row.innerHTML = `<span>${c.Ikon || '📌'} ${c.Nama_Kategori} <span class="text-[10px] text-[var(--ink-soft)] ml-1">(${c.Jenis})</span></span>`;
+      row.appendChild(btnDel);
+      container.appendChild(row);
+    });
+  }
+
+  async function saveCategory() {
+    const ikon = document.getElementById('cat-icon-input').value || '📌';
+    const nama = document.getElementById('cat-name-input').value;
+    const jenis = document.getElementById('cat-type-input').value;
+    if (!nama) return;
+
+    const newCat = {
+      ID_Kategori: 'CAT_' + new Date().getTime(),
+      Ikon: ikon,
+      Nama_Kategori: nama,
+      Jenis: jenis
     };
+
+    try {
+      Swal.fire({ title: 'Menyimpan Kategori...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await callApi('saveCategory', { Ikon: ikon, Nama_Kategori: nama, Jenis: jenis, Warna_Badge: '#B8903B' });
+    } catch (err) {
+      console.warn("Save category server gagal, simpan lokal:", err.message);
+    }
+
+    appData.categories.push(newCat);
+    saveLocalData();
+
+    document.getElementById('cat-name-input').value = '';
+    document.getElementById('cat-icon-input').value = '';
+    populateCategoryDropdown();
+    renderCategoryListModal();
+    Swal.fire({ ...getSwalConfig(), title: 'Berhasil', text: `Kategori ${nama} ditambahkan.`, icon: 'success', timer: 1200, showConfirmButton: false });
+  }
+
+  async function deleteCategory(namaKategori) {
+    try {
+      Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await callApi('deleteCategory', { Nama_Kategori: namaKategori });
+    } catch (err) {
+      console.warn("Delete category server gagal, hapus lokal:", err.message);
+    }
+
+    appData.categories = appData.categories.filter(c => c.Nama_Kategori !== namaKategori);
+    saveLocalData();
+
+    populateCategoryDropdown();
+    renderCategoryListModal();
+    Swal.fire({ ...getSwalConfig(), title: 'Terhapus!', icon: 'success', timer: 1200, showConfirmButton: false });
+  }
+
+  async function triggerAIAnalysis() {
+    Swal.fire({
+      ...getSwalConfig(),
+      title: 'Asisten AI',
+      html: '<div class="text-left text-sm leading-relaxed p-2 text-mono" id="ai-modal-content">Sedang menganalisa buku catatan bulan ini...</div>',
+      showConfirmButton: true, confirmButtonText: 'Tutup'
+    });
+
+    const now = new Date();
+    const currentMonthStr = now.toISOString().slice(0, 7);
+    let totalMasuk = 0, totalKeluar = 0;
+    const catMap = {};
+
+    appData.transactions.forEach(t => {
+      if ((t.Tanggal || '').slice(0, 7) === currentMonthStr) {
+        const nom = parseFloat(t.Nominal) || 0;
+        if (t.Jenis === 'Pemasukan') totalMasuk += nom;
+        if (t.Jenis === 'Pengeluaran') {
+          totalKeluar += nom;
+          catMap[t.Kategori] = (catMap[t.Kategori] || 0) + nom;
+        }
+      }
+    });
+
+    let topCat = '-', topNominal = 0;
+    for (let cat in catMap) {
+      if (catMap[cat] > topNominal) { topNominal = catMap[cat]; topCat = cat; }
+    }
+
+    try {
+      const aiRes = await callApi('getAIAnalysis', {
+        pemasukan: totalMasuk.toLocaleString('id-ID'),
+        pengeluaran: totalKeluar.toLocaleString('id-ID'),
+        saldo: (totalMasuk - totalKeluar).toLocaleString('id-ID'),
+        topKategori: topCat, topNominal: topNominal.toLocaleString('id-ID')
+      });
+      const el = document.getElementById('ai-modal-content');
+      if (el) el.innerHTML = `${aiRes}`;
+    } catch (err) {
+      const el = document.getElementById('ai-modal-content');
+      if (el) el.innerHTML = `Pencatatan bulan ini terlihat rapi. Pertahankan kebiasaan mencatatmu!`;
+    }
+  }
+
+  window.onload = function() {
+    document.getElementById('input-tanggal').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('filter-month').value = new Date().toISOString().slice(0, 7);
+    loadInitialData();
+  };
   </script>
 </body>
 </html>
